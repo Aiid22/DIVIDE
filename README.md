@@ -191,8 +191,7 @@ DIVIDE/
 │   ├── profiles/              # model and prompt profiles (hash-pinned)
 │   └── schemas/               # report JSON schema
 ├── data/                      # multi-type sample carriers (synthetic secrets only)
-├── examples/                  # synthetic, non-functional examples only
-└── tools/                     # gitleaks snapshot vendoring
+└── examples/                  # synthetic, non-functional examples only
 ```
 
 ## Citation
