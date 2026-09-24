@@ -1,6 +1,5 @@
 # DIVIDE: Publication-Oriented Research Artifact
 
-[English](README.md) | [中文](README.zh-CN.md)
 
 In *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning*, we present DIVIDE, a three-stage approach for carrier localization, secret recovery, and hierarchical offline verification. This repository provides our current Python implementation of Fig. 2, Table 1, Algorithm 1, Equation (1), and Sections 2.1–2.3 of the paper.
 
@@ -39,10 +38,9 @@ See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level corresp
 ```text
 DIVIDE/
 ├── README.md                     # English entry point (default)
-├── README.zh-CN.md               # Chinese entry point
 ├── pyproject.toml                # package metadata and compatible dependency ranges
 ├── constraints.txt               # pinned reproducibility versions
-├── docs/                          # bilingual method and audit records
+├── docs/                          # method and audit records (English)
 ├── examples/                      # unusable synthetic examples only
 └── src/divide/
     ├── localization/             # handler registry and recursive extraction

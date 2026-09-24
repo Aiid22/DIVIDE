@@ -1,7 +1,5 @@
 # Rule sources and versions
 
-[English](RULE_SOURCES.en.md) | [中文](RULE_SOURCES.md)
-
 ## DIVIDE core 2026.09.1
 
 Our current core rules cover AWS, GitHub, GitLab, Slack, Stripe, Google API keys, PEM private keys, and generic sensitive-field assignments. They are defined in `default_rules.yaml`, and every compiled rule carries provider, version, source, and license fields.

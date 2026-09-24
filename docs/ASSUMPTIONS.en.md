@@ -1,7 +1,5 @@
 # Engineering assumption ledger
 
-[English](ASSUMPTIONS.en.md) | [中文](ASSUMPTIONS.md)
-
 | ID | Engineering assumption | Impact | Retirement criterion |
 |---|---|---|---|
 | EA-001 | The OCR-constrained beam defaults to `B=64`. | Recall and latency. | Reconcile with our original experiment configuration or preregister calibration on a development set. |

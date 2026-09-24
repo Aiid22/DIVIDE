@@ -1,7 +1,5 @@
 # Paper-to-implementation mapping
 
-[English](METHOD_MAPPING.en.md) | [中文](METHOD_MAPPING.md)
-
 We use this table to record the source-level correspondence and evidence boundary between our paper and current implementation.
 
 | Paper component | Implementation entry | Fidelity statement |

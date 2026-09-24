@@ -1,7 +1,5 @@
 # Reproducibility status
 
-[English](REPRODUCIBILITY_STATUS.en.md) | [中文](REPRODUCIBILITY_STATUS.md)
-
 **UNVALIDATED**
 
 In this delivery, we generated the method implementation, capability contracts, rule audit, dataset manifest, metric/ablation framework, and test sources. We did not execute:
