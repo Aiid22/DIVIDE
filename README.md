@@ -4,8 +4,6 @@
 
 In *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning*, we present DIVIDE, a three-stage approach for carrier localization, secret recovery, and hierarchical offline verification. This repository provides our current Python implementation of Fig. 2, Table 1, Algorithm 1, Equation (1), and Sections 2.1–2.3 of the paper.
 
-This repository is the current implementation of DIVIDE.
-
 ## Method-to-artifact mapping
 
 ```text
@@ -26,8 +24,6 @@ Input file/project
 See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level correspondence and evidence boundaries.
 
 ## Carrier capability matrix
-
-Our registry defines an independent handler contract for every Table 1 format family:
 
 - Text: source code, TXT, JSON, CSV, XML, YAML, SVG, and PEM.
 - Archives: ZIP, TAR, GZIP, 7z, RAR, JAR, APK, RPM, and ISO.
@@ -124,4 +120,4 @@ Corrupt files, encrypted archives, exceeded budgets, unavailable dependencies, a
 
 ## Artifact scope
 
-This repository contains our current DIVIDE implementation. We intentionally do not bundle the research dataset, private deployment configuration, model weights, or external baseline binaries. A “complete adapter matrix” means that every Table 1 format has an explicit handler and capability contract; it does not mean every optional backend is available in every environment.
+We intentionally do not bundle the research dataset, private deployment configuration, model weights, or external baseline binaries. A “complete adapter matrix” means that every Table 1 format has an explicit handler and capability contract; it does not mean every optional backend is available in every environment.
