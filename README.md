@@ -169,8 +169,8 @@ divide rules audit -o rule-audit.json
 
 Every report embeds provenance: git revision, configuration summary, rule
 content hashes, and adapter capabilities, so any run can be attributed after
-the fact. See [`docs/METHOD_MAPPING.en.md`](docs/METHOD_MAPPING.en.md) for the
-claim-by-claim mapping between the paper and this codebase.
+the fact. `divide rules audit` reports the origin, pinned commit, and content
+hash of every rule source.
 
 ## Configuration
 
@@ -190,7 +190,6 @@ DIVIDE/
 │   ├── evaluation/            # RQ1 metrics + RQ2 ablation runner
 │   ├── profiles/              # model and prompt profiles (hash-pinned)
 │   └── schemas/               # report JSON schema
-├── docs/                      # method mapping, assumptions, rule sources
 ├── data/                      # multi-type sample carriers (synthetic secrets only)
 ├── examples/                  # synthetic, non-functional examples only
 └── tools/                     # gitleaks snapshot vendoring
@@ -210,5 +209,6 @@ DIVIDE/
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE). The bundled Gitleaks rule snapshot is
-vendored under its own MIT license with a pinned content hash; see
-[docs/THIRD_PARTY_NOTICES.en.md](docs/THIRD_PARTY_NOTICES.en.md).
+vendored under its own MIT license with a pinned content hash; the license
+copy ships with the snapshot at
+[`src/divide/verification/data/LICENSE.gitleaks`](src/divide/verification/data/LICENSE.gitleaks).
