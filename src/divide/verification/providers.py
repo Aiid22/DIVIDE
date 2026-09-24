@@ -36,7 +36,7 @@ class ConfigRuleProvider:
             item = dict(rule)
             item.update({
                 "provider_id": self.provider_id, "provider_version": self.version,
-                "source_url": "docs/RULE_SOURCES.md", "license": "project license",
+                "source_url": "docs/THIRD_PARTY_NOTICES.en.md", "license": "project license",
                 "priority": 100, "format_version": item.get("format_version"),
             })
             output.append(item)

@@ -176,9 +176,8 @@ claim-by-claim mapping between the paper and this codebase.
 
 Defaults ship in [`src/divide/default_rules.yaml`](src/divide/default_rules.yaml) —
 resource budgets, OCR and LLM settings, verification weights, context lexicons,
-and the core credential rules. Override any subset via `--config your.yaml`;
-see [`docs/ASSUMPTIONS.en.md`](docs/ASSUMPTIONS.en.md) for what each knob
-assumes.
+and the core credential rules. Every knob is documented inline; override any
+subset via `--config your.yaml`.
 
 ## Project layout
 
