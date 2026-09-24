@@ -71,12 +71,15 @@ what is available on your machine.
 
 ## Installation
 
-Requires Python 3.12+.
+Requires Python 3.12+. The project follows the standard [uv](https://docs.astral.sh/uv/)
+workflow; `uv.lock` pins every dependency for reproducible setup:
 
 ```bash
-pip install .                     # from a clone of this repository
-uv pip install -e . --constraints constraints.txt   # development install
+uv sync                              # create .venv and install the locked environment
+uv run divide scan /path/to/project  # run through uv (no activation needed)
 ```
+
+Plain `pip install .` also works.
 
 ## Usage
 

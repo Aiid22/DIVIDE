@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=75", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.9,<1"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "divide"
 
 [project]
 name = "divide-secret-discovery"
@@ -43,16 +46,4 @@ dependencies = [
 
 [project.scripts]
 divide = "divide.cli:app"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-divide = ["default_rules.yaml", "schemas/*.json"]
-"divide.verification.data" = ["*.toml", "*.json", "LICENSE.gitleaks"]
-"divide.profiles" = ["*.yaml", "*.txt"]
 
