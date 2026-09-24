@@ -1,10 +1,13 @@
+"""Secret recovery (paper Sec. 2.2): decoding, grouping, LLM planning, and extraction."""
+
 from .decoder import RecoveredText, recover_record
 from .encoding import EncodingInference, infer_encoding
+from .extraction import CandidateExtractor
 from .fragments import build_related_groups, recover_fragments
 from .planner import DeterministicPlanExecutor, LLMPlanner, NullRecoveryPlanner, OpenAIRecoveryPlanner
 
 __all__ = [
     "RecoveredText", "recover_record", "recover_fragments", "build_related_groups",
     "EncodingInference", "infer_encoding", "LLMPlanner", "NullRecoveryPlanner", "OpenAIRecoveryPlanner",
-    "DeterministicPlanExecutor",
+    "DeterministicPlanExecutor", "CandidateExtractor",
 ]

@@ -1,3 +1,5 @@
+"""Core data model shared across localization, recovery, and verification."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -28,6 +30,7 @@ class CarrierObject:
 
 @dataclass(slots=True)
 class CarrierRecord:
+    """One localized content region with location and context."""
     id: str
     root_path: str
     nested_path: str
@@ -53,6 +56,7 @@ class CarrierRecord:
 
 @dataclass(slots=True)
 class RecoveryStep:
+    """A single recovery operation applied to a record."""
     operation: str
     detail: str
     input_sha256: str | None = None
@@ -64,11 +68,13 @@ class RecoveryStep:
 
 @dataclass(slots=True)
 class RecoveryTrace:
+    """Provenance chain of recovery steps for one candidate."""
     source_record_ids: list[str]
     steps: list[RecoveryStep] = field(default_factory=list)
     confidence: float = 1.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable view."""
         return {
             "source_record_ids": self.source_record_ids,
             "steps": [asdict(step) for step in self.steps],
@@ -78,6 +84,7 @@ class RecoveryTrace:
 
 @dataclass(slots=True)
 class Candidate:
+    """A rule match over recovered text, awaiting verification."""
     value: str
     credential_type: str
     rule_id: str
@@ -99,6 +106,7 @@ class Candidate:
 
 @dataclass(slots=True)
 class RelatedGroup:
+    """Records grouped for cross-fragment recovery."""
     id: str
     relation: str
     record_ids: list[str]
@@ -109,6 +117,7 @@ class RelatedGroup:
 
 @dataclass(slots=True)
 class VerificationDecision:
+    """Verifier verdict and evidence for one candidate."""
     candidate_fingerprint: str
     accepted: bool
     stage: str
@@ -119,6 +128,7 @@ class VerificationDecision:
 
 @dataclass(slots=True)
 class Finding:
+    """A verified secret; always redacted in reports."""
     value: str
     credential_type: str
     confidence: float
@@ -134,6 +144,7 @@ class Finding:
 
     @staticmethod
     def mask(value: str) -> str:
+        """Return the redacted representation used in reports."""
         if "-----BEGIN" in value:
             first = value.splitlines()[0] if value.splitlines() else "PRIVATE KEY"
             return f"{first} ... [REDACTED]"
@@ -142,6 +153,7 @@ class Finding:
         return f"{value[:4]}{'*' * min(12, len(value) - 8)}{value[-4:]}"
 
     def to_dict(self, show_secrets: bool = False) -> dict[str, Any]:
+        """Return a JSON-serializable view."""
         return {
             "credential_type": self.credential_type,
             "confidence": round(self.confidence, 4),
@@ -161,6 +173,7 @@ class Finding:
 
 @dataclass(slots=True)
 class ScanWarning:
+    """Non-fatal issue encountered during a scan."""
     code: str
     path: str
     message: str
@@ -168,6 +181,7 @@ class ScanWarning:
 
 @dataclass(slots=True)
 class ScanReport:
+    """Schema-2.0 scan result: findings, warnings, provenance."""
     target: str
     findings: list[Finding]
     warnings: list[ScanWarning]
@@ -185,6 +199,7 @@ class ScanReport:
     display_language: Literal["en", "zh"] = "en"
 
     def to_dict(self, show_secrets: bool = False) -> dict[str, Any]:
+        """Return a JSON-serializable view."""
         return {
             "schema_version": self.schema_version,
             "display_language": self.display_language,
@@ -210,6 +225,7 @@ class ScanReport:
 
 @dataclass(slots=True)
 class ExperimentResult:
+    """Per-artifact counts for benchmark reporting."""
     profile: str
     unit: Literal["occurrence", "project_unique"]
     true_positive: int

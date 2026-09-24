@@ -1,3 +1,11 @@
+"""End-to-end orchestration of the three-stage DIVIDE workflow.
+
+``DividePipeline`` wires the paper's three modules together: localization
+produces carrier records, recovery reconstructs candidate secrets, and
+verification decides which candidates are genuine findings.  Ablation
+profiles disable one stage at a time to reproduce the paper's RQ2 study.
+"""
+
 from __future__ import annotations
 
 import time
@@ -5,17 +13,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from divide.config import AppConfig
-from divide.i18n import parse_language
 from divide.localization import ArtifactLocalizer
 from divide.models import Candidate, RecoveryTrace, ScanReport, ScanWarning
 from divide.provenance import experiment_provenance
-from divide.recovery import LLMPlanner, RecoveredText, recover_fragments, recover_record
-from divide.rules import CandidateExtractor
+from divide.recovery import LLMPlanner, CandidateExtractor, RecoveredText, recover_fragments, recover_record
 from divide.verification import Verifier
 
 
 @dataclass(frozen=True, slots=True)
 class AblationProfile:
+    """Stage switches used by the RQ2 ablation study."""
+
     name: str = "full"
     media_extraction: bool = True
     recovery: bool = True
@@ -31,6 +39,8 @@ ABLATION_PROFILES = {
 
 
 class DividePipeline:
+    """Scan a target through localization, recovery, and verification."""
+
     def __init__(self, config: AppConfig):
         self.config = config
         self.localizer = ArtifactLocalizer(config)
@@ -41,6 +51,7 @@ class DividePipeline:
     def scan(
         self, target: Path, timeout_seconds: float | None = None, *, ablation_profile: str = "full",
     ) -> ScanReport:
+        """Run the full workflow on ``target`` and return a schema-2.0 report."""
         if ablation_profile not in ABLATION_PROFILES:
             raise ValueError(f"unknown ablation profile: {ablation_profile}")
         profile = ABLATION_PROFILES[ablation_profile]
@@ -92,11 +103,12 @@ class DividePipeline:
             carrier_records=len(localized.records), raw_candidates=raw_candidate_count,
             duplicate_candidates=candidate_duplicates + verified.duplicates, config_summary=self.config.summary(),
             provenance=provenance, capabilities=capabilities, candidate_decisions=verified.decisions,
-            ablation_profile=profile.name, display_language=parse_language(self.config.output.language).value,
+            ablation_profile=profile.name, display_language="en",
         )
 
 
 def _deduplicate_candidates(candidates: list[Candidate]) -> tuple[list[Candidate], int]:
+    """Merge candidates with identical value and source location (Algorithm 1, line 15)."""
     merged: dict[tuple[str, str], Candidate] = {}
     for candidate in candidates:
         location = candidate.source_location_key or "\0".join((candidate.root_path, candidate.nested_path, candidate.location))

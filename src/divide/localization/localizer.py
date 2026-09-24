@@ -1,3 +1,5 @@
+"""Recursive carrier extraction across archives, documents, media, and databases (paper Sec. 2.1)."""
+
 from __future__ import annotations
 
 import csv
@@ -49,6 +51,7 @@ def reconstruct_ocr_line(words: list[tuple[int, str, float, dict[str, int]]]) ->
 
 @dataclass(slots=True)
 class LocalizationResult:
+    """Carrier records and warnings from one localization pass."""
     records: list[CarrierRecord] = field(default_factory=list)
     objects: list[CarrierObject] = field(default_factory=list)
     warnings: list[ScanWarning] = field(default_factory=list)
@@ -82,6 +85,7 @@ class _HandlerExecutionContext:
             self.localizer._dispatch_object(self.obj, self.kind, self.state)
 
     def extract_records(self, _handler: Any, obj: CarrierObject) -> tuple[CarrierRecord, ...]:
+        """Return records produced by dispatching this object once."""
         if obj.id != self.obj.id:
             raise ValueError("handler execution context object mismatch")
         self._execute_once()
@@ -91,6 +95,7 @@ class _HandlerExecutionContext:
         )
 
     def enumerate_children(self, _handler: Any, obj: CarrierObject) -> tuple[CarrierObject, ...]:
+        """Return children produced by dispatching this object once."""
         if obj.id != self.obj.id:
             raise ValueError("handler execution context object mismatch")
         self._execute_once()
@@ -98,17 +103,20 @@ class _HandlerExecutionContext:
 
 
 class ArtifactLocalizer:
+    """Facade over the handler registry implementing recursive localization."""
     def __init__(self, config: AppConfig, registry: HandlerRegistry | None = None):
         self.config = config
         self.registry = registry or default_registry()
 
     def capabilities(self) -> list[dict[str, Any]]:
+        """Return capability rows for every registered handler."""
         return self.registry.capabilities()
 
     def scan(
         self, target: Path, timeout_seconds: float | None = None,
         disabled_carrier_types: frozenset[str] = frozenset(),
     ) -> LocalizationResult:
+        """Localize every secret-bearing carrier under ``target``."""
         deadline = time.monotonic() + timeout_seconds if timeout_seconds else None
         state = _State(deadline=deadline, disabled_carrier_types=disabled_carrier_types)
         if target.is_symlink():
@@ -788,6 +796,7 @@ class ArtifactLocalizer:
             vm_steps = 0
 
             def budget_guard() -> int:
+                """SQLite progress handler that aborts when the deadline passes."""
                 nonlocal vm_steps
                 vm_steps += 1_000
                 timed_out = bool(state.deadline and time.monotonic() > state.deadline)

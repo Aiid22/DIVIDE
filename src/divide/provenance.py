@@ -1,3 +1,5 @@
+"""Experiment provenance: stable content hashes, git revision, and environment fingerprint."""
+
 from __future__ import annotations
 
 import hashlib
@@ -12,6 +14,7 @@ from typing import Any
 
 
 def stable_hash(value: Any) -> str:
+    """Deterministic sha256 over a JSON-serializable payload."""
     if is_dataclass(value):
         value = asdict(value)
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
@@ -32,6 +35,7 @@ def experiment_provenance(
     *, project_root: Path, config: Any, rule_hash: str, capabilities: list[dict[str, Any]], seed: int,
     model_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Collect git revision, config, and environment fingerprints."""
     return {
         "code_revision": _git_revision(project_root),
         "config_sha256": stable_hash(config),

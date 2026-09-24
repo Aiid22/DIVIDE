@@ -1,3 +1,5 @@
+"""Related-group construction and deterministic fragment recovery (paper Sec. 2.2)."""
+
 from __future__ import annotations
 
 import hashlib
@@ -51,6 +53,7 @@ def build_related_groups(records: list[CarrierRecord]) -> tuple[list[RelatedGrou
 
 
 def recover_fragments(records: list[CarrierRecord]) -> list[tuple[CarrierRecord, RecoveredText]]:
+    """Deterministically recover whole values from related groups."""
     recovered: list[tuple[CarrierRecord, RecoveredText]] = []
     groups, by_id = build_related_groups(records)
     for group in groups:

@@ -1,3 +1,5 @@
+"""Hierarchical offline verification of recovered candidates (paper Sec. 2.3)."""
+
 from __future__ import annotations
 
 import hashlib
@@ -7,12 +9,13 @@ from dataclasses import dataclass
 
 from divide.config import AppConfig
 from divide.models import Candidate, Finding, VerificationDecision
-from divide.rules import shannon_entropy
-from divide.rulesets import ChecksumRegistry
+from .rules import shannon_entropy
+from .checksums import ChecksumRegistry
 
 
 @dataclass(slots=True)
 class VerificationResult:
+    """Verified findings, duplicate count, and per-candidate decisions."""
     findings: list[Finding]
     rejected: int
     duplicates: int
@@ -20,11 +23,13 @@ class VerificationResult:
 
 
 class Verifier:
+    """Hierarchical offline verification: format, checksum, context."""
     def __init__(self, config: AppConfig, checksums: ChecksumRegistry | None = None):
         self.config = config
         self.checksums = checksums or ChecksumRegistry()
 
     def verify(self, candidates: list[Candidate], *, post_filter: bool = True) -> VerificationResult:
+        """Verify candidates and return findings plus decisions."""
         accepted: list[Finding] = []
         decisions: list[VerificationDecision] = []
         rejected = 0

@@ -1,119 +1,214 @@
-# DIVIDE: Publication-Oriented Research Artifact
+<div align="center">
 
+# DIVIDE
 
-In *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning*, we present DIVIDE, a three-stage approach for carrier localization, secret recovery, and hierarchical offline verification. This repository provides our current Python implementation of Fig. 2, Table 1, Algorithm 1, Equation (1), and Sections 2.1–2.3 of the paper.
+**Secret discovery beyond text-only scanning.**
 
-## Method-to-artifact mapping
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![Carriers](https://img.shields.io/badge/carriers-44+file--types-orange.svg)](#supported-carriers)
+[![Offline](https://img.shields.io/badge/verification-100%25%20offline-purple.svg)](#how-it-works)
 
-```text
-Input file/project
-  └─ CarrierHandler registry
-       signature + MIME + structural validation → CarrierObject / CarrierRecord
-       recursive expansion + shared resource budgets → parent, field, page, bbox, offset, hash
-          └─ Recovery
-               encoding inference and normalization → bounded Base64/Base64URL/Hex/URL decoding
-               OCR geometric reconstruction → Equation (1) constrained beam search
-               RelatedGroup → validated RecoveryPlan → deterministic executor
-                  └─ Hierarchical verification
-                       type/version → hard format checks → checksum → exact placeholder checks
-                       → field relations and code noise → carrier/context/recovery scoring
-                          └─ redacted schema-2.0 report / RQ1 / RQ2
+*API keys do not always leak as plain text. They hide inside archives,
+Office documents, SQLite rows, images, and fragmented encodings —
+blind spots that text-based scanners never reach.*
+
+</div>
+
+---
+
+## Why DIVIDE
+
+Text-based secret scanners miss credentials that are **recoverable but unextracted** —
+split across strings, buried in non-text carriers, or masked by encoding.
+DIVIDE closes this gap with a three-stage pipeline that **localizes** any carrier,
+**recovers** complete candidate secrets, and **verifies** them offline.
+
+| | DIVIDE | Gitleaks / TruffleHog |
+|---|---|---|
+| Carriers | Text, archives, Office, PDF, images, binaries, databases | Text-like files only |
+| Fragmented secrets | Reconstructed (decoding, OCR joins, LLM planning) | Missed |
+| Verification | Format constraints + checksums, zero network calls | Regex / network-dependent |
+
+**Headline results** (3,340-file benchmark, 4,705 annotated secret occurrences):
+
+- **91.07% precision / 81.77% recall** (F1 0.86) under unique-secret normalization, outperforming all evaluated scanners
+- Beats the Qwen3-VL-30B foundation-model baseline by **+1.95pp precision / +5.63pp recall**
+- **61–78% faster** than foundation-model baselines on non-image and image subsets
+
+## How it works
+
+```mermaid
+flowchart LR
+    T[Scan target] --> L
+    subgraph L[1 · Localization]
+        L1[Type detection:<br/>signatures · MIME · structure]
+        L2[Recursive extraction:<br/>archives · Office · SQLite · OCR]
+    end
+    L --> R
+    subgraph R[2 · Recovery]
+        R1[Bounded decoding:<br/>Base64 · hex · URL]
+        R2[OCR reading-order joins<br/>+ confusion correction]
+        R3[LLM planning across<br/>related fragments]
+        R4[Rule-based extraction]
+    end
+    R --> V
+    subgraph V[3 · Verification]
+        V1[Format constraints]
+        V2[Checksums]
+        V3[Context evidence]
+    end
+    V --> F[Redacted JSON report]
 ```
 
-See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level correspondence and evidence boundaries.
+Each stage lives in its own package — the code layout mirrors the paper:
 
-## Carrier capability matrix
+| Paper module | Code | What it does |
+|---|---|---|
+| §2.1 Localization | [`src/divide/localization/`](src/divide/localization/) | Detects actual content types and recursively extracts carrier records |
+| §2.2 Recovery | [`src/divide/recovery/`](src/divide/recovery/) | Reconstructs candidates: decoding, OCR joins, LLM-planned fragment assembly |
+| §2.3 Verification | [`src/divide/verification/`](src/divide/verification/) | Offline format, checksum, and context verification with hash-pinned rules |
 
-- Text: source code, TXT, JSON, CSV, XML, YAML, SVG, and PEM.
-- Archives: ZIP, TAR, GZIP, 7z, RAR, JAR, APK, RPM, and ISO.
-- Documents: DOC/DOCX, XLS/XLSX, PPT/PPTX, ODF, EPUB, RTF, and Outlook MSG.
-- Binary and media: ELF, PE, Mach-O, WASM, fonts, audio, and video.
-- Images: PNG, JPEG, GIF, TIFF, WebP, ICO, and PSD.
-- Other carriers: PDF, SQLite, GNU MO/Gettext, and ASCII/UTF-16 fallback for unknown binaries.
+## Supported carriers
 
-`divide capabilities --json` reports each adapter as `full`, `partial`, `fallback`, or `unavailable` in the current environment. We do not silently label a format as fully supported when an optional parser or external decoder is missing. Some formats, including RAR and video, may expose only metadata or string fallback; image OCR also depends on the configured OCR engine and language data.
+| Handler | Representative inputs |
+|---|---|
+| Text | Source code, TXT, JSON, CSV, XML, YAML, SVG, PEM |
+| Archive | ZIP, TAR, GZIP, 7z, RAR, JAR, APK, RPM, ISO |
+| Office | DOC/DOCX, XLS/XLSX, PPT/PPTX, ODF, EPUB, RTF, Outlook |
+| Binary | ELF, PE, Mach-O, WASM, audio, video |
+| Image | PNG, JPEG, GIF, TIFF, WebP, ICO, PSD |
+| PDF | PDF |
+| Database | SQLite files, MySQL SQL dumps |
+| Gettext | GNU `.mo` catalogs |
+| Fallback | Any unrecognized binary (string extraction) |
 
-## Repository layout
+Missing optional backends degrade to safe fallbacks — run `divide capabilities` to see what is available on your machine.
+
+## Installation
+
+Requires Python 3.12+.
+
+```bash
+# from a clone of this repository
+pip install .
+
+# or with uv
+uv pip install -e . --constraints constraints.txt
+```
+
+Optional carrier backends (OCR, 7z, RAR, EPUB, ...) are auto-detected; see
+`pyproject.toml` for the full dependency ranges and `constraints.txt` for
+pinned reproducible versions.
+
+## Quickstart
+
+```bash
+# scan a file or directory (redacted JSON report by default)
+divide scan /path/to/project -o report.json
+
+# exit non-zero when secrets are found (CI gate)
+divide scan /path/to/project --fail-on-findings
+
+# show what carrier adapters are available here
+divide capabilities
+```
+
+### CLI reference
+
+```text
+divide scan TARGET [OPTIONS]
+  -o, --output PATH             JSON report path (default: divide-report.json)
+  --config PATH                 YAML configuration override
+  --max-depth INT               Recursion depth budget
+  --max-object-size INT         Per-object byte budget
+  --max-expanded-size INT       Total expansion byte budget
+  --max-compression-ratio FLOAT Compression-ratio ceiling
+  --ocr / --no-ocr              Toggle image OCR recovery
+  --llm-base-url TEXT           OpenAI-compatible local /v1 endpoint
+  --llm-model TEXT              Planner model name
+  --allow-remote-llm            Explicitly permit non-local endpoints
+  --timeout FLOAT               Overall scan deadline (seconds)
+  --show-secrets                Include unredacted values (local debug only)
+  --fail-on-findings            Exit 1 when any finding is reported
+
+divide capabilities [--json] [--config PATH]
+divide benchmark MANIFEST [-o PATH] [--config PATH]
+divide ablate MANIFEST [-o PATH] [--config PATH]
+divide rules audit [-o PATH] [--config PATH]
+```
+
+The same commands work through Python: `python -m divide scan ...`.
+
+### Optional LLM recovery
+
+Fragment-level planning is **off by default** and runs fully offline when enabled
+with a locally deployed, OpenAI-compatible endpoint (e.g., vLLM serving
+Qwen3-32B-AWQ):
+
+```bash
+divide scan target/ --llm-base-url http://localhost:8000/v1 --llm-model qwen3-32b-awq
+```
+
+Model output is treated as an untrusted plan: references and operations are
+validated against a JSON schema, then replayed by a deterministic executor.
+No secret material ever leaves the machine.
+
+## Reproducing the paper
+
+```bash
+# RQ1: raw-occurrence and project-unique metrics
+divide benchmark dataset-manifest.json -o divide-benchmark.json
+
+# RQ2: full / no-media / no-recovery / no-post-filter ablations
+divide ablate dataset-manifest.json -o divide-ablation.json
+
+# rule provenance: origins, versions, hashes, licenses
+divide rules audit -o rule-audit.json
+```
+
+Every report embeds provenance: git revision, configuration summary, rule
+content hashes, and adapter capabilities, so any run can be attributed after
+the fact. See [`docs/METHOD_MAPPING.en.md`](docs/METHOD_MAPPING.en.md) for the
+claim-by-claim mapping between the paper and this codebase.
+
+## Configuration
+
+Defaults ship in [`src/divide/default_rules.yaml`](src/divide/default_rules.yaml) —
+resource budgets, OCR and LLM settings, verification weights, context lexicons,
+and the core credential rules. Override any subset via `--config your.yaml`;
+see [`docs/ASSUMPTIONS.en.md`](docs/ASSUMPTIONS.en.md) for what each knob
+assumes.
+
+## Project layout
 
 ```text
 DIVIDE/
-├── README.md                     # English entry point (default)
-├── pyproject.toml                # package metadata and compatible dependency ranges
-├── constraints.txt               # pinned reproducibility versions
-├── docs/                          # method and audit records (English)
-├── examples/                      # unusable synthetic examples only
-└── src/divide/
-    ├── localization/             # handler registry and recursive extraction
-    ├── recovery/                 # encoding, beam search, RelatedGroup, plan executor
-    ├── rulesets/                 # our rules, Gitleaks snapshot, and checksums
-    ├── verification/             # hierarchical decisions and source-level deduplication
-    ├── evaluation/               # manifest, RQ1 metrics, RQ2 ablations
-    └── schemas/                  # JSON Schema for the scan report
+├── src/divide/
+│   ├── localization/          # paper §2.1 — type detection + recursive extraction
+│   ├── recovery/              # paper §2.2 — decoding, OCR joins, LLM planning, extraction
+│   ├── verification/          # paper §2.3 — rules, checksums, hierarchical verifier
+│   ├── evaluation/            # RQ1 metrics + RQ2 ablation runner
+│   ├── profiles/              # model and prompt profiles (hash-pinned)
+│   └── schemas/               # report JSON schema
+├── docs/                      # method mapping, assumptions, rule sources
+├── examples/                  # synthetic, non-functional examples only
+└── tools/                     # gitleaks snapshot vendoring
 ```
 
-## CLI and language selection
+## Citation
 
-English is the default display language. Every command accepts `--language en|zh` (or `--lang en|zh`); `output.language` in `default_rules.yaml` provides the persistent default. JSON field names remain stable in English for schema compatibility, while each output records `display_language`.
-
-```bash
-divide scan TARGET --output report.json
-divide scan TARGET --output report.json --language zh
-divide capabilities --json --language en
-divide benchmark MANIFEST --output benchmark.json --language en
-divide ablate MANIFEST --output ablation.json --language en
-divide rules audit --output rules-audit.json --language en
-```
-
-Scan options include `--config`, resource limits, `--ocr/--no-ocr`, `--timeout`, local OpenAI-compatible planner settings, and `--show-secrets`. Reports contain only masked values and SHA-256 fingerprints by default; plaintext is emitted only when `--show-secrets` is explicitly set.
-
-Our default configuration is in `src/divide/default_rules.yaml`. It bounds recursive depth, per-object and total expanded size, archive members and compression ratio, image pixels, media frames, SQLite rows and VM steps, OCR pages, decode depth and output, beam width, and recovery-plan budgets.
-
-## Recovery planning and Qwen profile
-
-The default planner is `null` and reports `model_unavailable`; it does not call a model. We provide a versioned profile for serving Qwen3-32B-AWQ through an OpenAI-compatible vLLM endpoint and fix the prompt identifier to `divide-recovery-plan-v1`. A model may propose only `concat`, `decode`, and constrained `substitute` operations over existing record references. Our deterministic executor runs a plan only after schema, reference-set, single-assignment, operation allowlist, budget, and unique-output validation.
-
-## Rules and offline verification
-
-Our high-confidence core rules carry version, source, format constraints, test-vector, and license metadata. We also pin the complete upstream Gitleaks v8.30.1 configuration at commit `83d9cd684c87d95d656c1458ef04895a7f1cbd8e`; its content SHA-256 is recorded in the snapshot manifest. The importer converts `secretGroup`, entropy, keywords, global and rule-level allowlists, stopwords, and path rules. Our rules have precedence, while cross-provider conflicts retain both provenance records.
-
-The GitHub token checksum plugin implements CRC32 → Base62 with the `0-9A-Za-z` alphabet → a six-character suffix with left padding. The alphabet remains an explicit constructor parameter for format-version handling.
-
-## Dataset and experiment protocol
-
-We do not commit the research dataset. A manifest supplies `artifact_id`, `project_id`, relative path, file SHA-256, MIME, secret SHA-256 fingerprints, and location annotations. See `examples/dataset-manifest.example.json`.
-
-`benchmark` reports two units:
-
-- raw occurrence: an instance defined by project, carrier, fingerprint, and location;
-- project unique: `(project_id, secret fingerprint)`, normalized only in the evaluation layer.
-
-Both units report precision, recall, F1, FDR, and latency. `ablate` runs the fixed `full`, `no-media`, `no-recovery`, and `no-post-filter` profiles. Results record code version, configuration/rule/capability hashes, random seed, model profile, manifest hash, and environment information. The Gitleaks, TruffleHog, KEYSENTINEL, and Qwen LLM/VLM comparisons in the paper were run with the upstream tools and deployments, which are not bundled with this repository.
-
-## Schema 2.0 excerpt
-
-```json
-{
-  "schema_version": "2.0",
-  "display_language": "en",
-  "provenance": {"code_revision": "..."},
-  "capabilities": [{"handler_id": "rar", "status": "fallback"}],
-  "candidate_decisions": [{"accepted": false, "stage": "hard:checksum"}],
-  "ablation_profile": "full",
-  "summary": {"findings": 0},
-  "findings": []
+```bibtex
+@software{divide2026,
+  title  = {DIVIDE: Secret Discovery Beyond Text-Only Scanning},
+  author = {Liu, Di and Fan, Zhenye and Tong, Weiyuan and Xu, Shenglin and Wang, Yongjun and Jiang, Zhiyuan},
+  url    = {https://github.com/Aiid22/DIVIDE},
+  year   = {2026}
 }
 ```
 
-Corrupt files, encrypted archives, exceeded budgets, unavailable dependencies, and malicious recovery plans become warnings or decisions instead of aborting the entire scan.
+## License
 
-## Security boundaries
-
-- We validate archive member paths before temporary extraction, never write into the scan target, and skip symbolic links by default.
-- We open SQLite in read-only immutable mode with a query budget and parse XML through `defusedxml`.
-- Decoding, OCR beams, plan operations, and outputs are bounded; model text is never executed as code.
-- We use only unusable synthetic secrets in examples. Evaluation manifests store fingerprints rather than plaintext.
-- `--show-secrets` writes plaintext into the report and should be used only in a controlled experiment environment.
-
-## Artifact scope
-
-We intentionally do not bundle the research dataset, private deployment configuration, model weights, or external baseline binaries. A “complete adapter matrix” means that every Table 1 format has an explicit handler and capability contract; it does not mean every optional backend is available in every environment.
+Apache-2.0 — see [LICENSE](LICENSE). The bundled Gitleaks rule snapshot is
+vendored under its own MIT license with a pinned content hash; see
+[docs/THIRD_PARTY_NOTICES.en.md](docs/THIRD_PARTY_NOTICES.en.md).

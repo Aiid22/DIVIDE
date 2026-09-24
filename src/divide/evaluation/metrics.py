@@ -1,3 +1,5 @@
+"""Precision, recall, and F1 over raw-occurrence and project-unique units (RQ1)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -5,12 +7,14 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class ScoreCounts:
+    """Confusion counts for one evaluation unit."""
     true_positive: int
     false_positive: int
     false_negative: int
 
 
 def compute_metrics(counts: ScoreCounts) -> dict[str, float | int]:
+    """Return precision, recall, and F1 for the given counts."""
     tp, fp, fn = counts.true_positive, counts.false_positive, counts.false_negative
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
@@ -23,4 +27,5 @@ def compute_metrics(counts: ScoreCounts) -> dict[str, float | int]:
 
 
 def score_sets(expected: set[tuple[str, ...]], predicted: set[tuple[str, ...]]) -> ScoreCounts:
+    """Score predicted sets against ground truth per counting unit."""
     return ScoreCounts(len(expected & predicted), len(predicted - expected), len(expected - predicted))

@@ -1,3 +1,5 @@
+"""Versioned rule sources: packaged defaults plus a hash-pinned Gitleaks snapshot."""
+
 from __future__ import annotations
 
 import hashlib
@@ -20,6 +22,7 @@ def translate_re2(pattern: str) -> str:
 
 
 class ConfigRuleProvider:
+    """Rules defined in ``default_rules.yaml`` and user overrides."""
     provider_id = "divide-core"
     version = "2026.09.1"
 
@@ -27,6 +30,7 @@ class ConfigRuleProvider:
         self.config = config
 
     def load(self) -> list[dict[str, Any]]:
+        """Return credential rules from configuration."""
         output = []
         for rule in self.config.credential_rules:
             item = dict(rule)
@@ -39,8 +43,9 @@ class ConfigRuleProvider:
         return output
 
     def audit(self) -> dict[str, Any]:
+        """Return source metadata and content hash."""
         rules = self.load()
-        vectors_path = Path(str(files("divide.rulesets.data").joinpath("core_test_vectors.json")))
+        vectors_path = Path(str(files("divide.verification.data").joinpath("core_test_vectors.json")))
         errors = []
         for rule in rules:
             try:
@@ -55,13 +60,15 @@ class ConfigRuleProvider:
 
 
 class GitleaksRuleProvider:
+    """Hash-pinned Gitleaks v8.30.1 snapshot loader."""
     provider_id = "gitleaks"
     version = "v8.30.1"
 
     def __init__(self, snapshot_path: Path | None = None):
-        self.snapshot_path = snapshot_path or Path(str(files("divide.rulesets.data").joinpath("gitleaks_v8.30.1.toml")))
+        self.snapshot_path = snapshot_path or Path(str(files("divide.verification.data").joinpath("gitleaks_v8.30.1.toml")))
 
     def load(self) -> list[dict[str, Any]]:
+        """Return rules translated from the pinned snapshot."""
         with self.snapshot_path.open("rb") as handle:
             data = tomllib.load(handle)
         global_allowlist = data.get("allowlist") or {}
@@ -90,6 +97,7 @@ class GitleaksRuleProvider:
         return converted
 
     def audit(self) -> dict[str, Any]:
+        """Return snapshot origin, hash, and license metadata."""
         raw = self.snapshot_path.read_bytes()
         manifest_path = self.snapshot_path.with_name("snapshot_manifest.json")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -116,6 +124,7 @@ class GitleaksRuleProvider:
 
 
 class CompositeRuleProvider:
+    """Merges child providers and resolves rule conflicts."""
     provider_id = "divide-composite"
     version = "2.0"
 
@@ -123,10 +132,12 @@ class CompositeRuleProvider:
         self.providers = providers
 
     def load(self) -> list[dict[str, Any]]:
+        """Return rules from all children, conflict-resolved."""
         rules = [rule for provider in self.providers for rule in provider.load()]
         return sorted(rules, key=lambda item: (-int(item.get("priority", 0)), item["id"]))
 
     def audit(self) -> dict[str, Any]:
+        """Return merged audit metadata from all children."""
         reports = [provider.audit() for provider in self.providers]
         rules = self.load()
         by_pattern: dict[str, list[dict[str, str]]] = {}

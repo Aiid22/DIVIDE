@@ -1,3 +1,5 @@
+"""Content-type detection from file signatures, MIME rules, and structural features (paper Sec. 2.1)."""
+
 from __future__ import annotations
 
 import io
@@ -10,6 +12,7 @@ from pathlib import Path
 
 @dataclass(frozen=True, slots=True)
 class Detection:
+    """Resolved content type with method and confidence evidence."""
     kind: str
     mime: str
     confidence: float
@@ -64,6 +67,7 @@ def _zip_subtype(data: bytes, suffix: str) -> tuple[str, bool, str]:
 
 
 def detect(data: bytes, name: str) -> Detection:
+    """Detect the carrier type of a payload from signature and structure."""
     suffix = Path(name).suffix.lower()
     guessed_mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
     signatures = (

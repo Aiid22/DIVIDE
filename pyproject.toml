@@ -53,6 +53,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 divide = ["default_rules.yaml", "schemas/*.json"]
-"divide.rulesets.data" = ["*.toml", "*.json", "LICENSE.gitleaks"]
+"divide.verification.data" = ["*.toml", "*.json", "LICENSE.gitleaks"]
 "divide.profiles" = ["*.yaml", "*.txt"]
 

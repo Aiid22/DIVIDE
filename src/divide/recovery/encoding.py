@@ -1,3 +1,5 @@
+"""Encoding inference from byte-order marks, decoding validity, and character distributions."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -7,6 +9,7 @@ from charset_normalizer import from_bytes
 
 @dataclass(frozen=True, slots=True)
 class EncodingInference:
+    """Inferred charset with confidence and BOM evidence."""
     encoding: str
     confidence: float
     text: str

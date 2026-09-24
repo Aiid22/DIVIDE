@@ -1,3 +1,5 @@
+"""Bounded recursive decoding of Base64, hexadecimal, and URL encodings plus escape normalization (paper Sec. 2.2)."""
+
 from __future__ import annotations
 
 import base64
@@ -25,12 +27,14 @@ def _sha(value: str) -> str:
 
 @dataclass(slots=True)
 class RecoveredText:
+    """Recovered character sequence with its provenance trace."""
     text: str
     trace: RecoveryTrace
 
 
 @dataclass(frozen=True, slots=True)
 class RecoveryConstraint:
+    """Bounded decode-depth and output-size budgets."""
     rule_id: str
     prefixes: tuple[str, ...]
     min_length: int
@@ -38,6 +42,7 @@ class RecoveryConstraint:
     charset: str | None = None
 
     def permits(self, value: str, *, final: bool) -> bool:
+        """Return True when the budget allows one more decode step."""
         if len(value) > self.max_length or (final and len(value) < self.min_length):
             return False
         if self.prefixes:
@@ -50,6 +55,7 @@ class RecoveryConstraint:
 
 
 def constraints_from_config(config: AppConfig) -> list[RecoveryConstraint]:
+    """Translate ``Limits`` into decoder constraints."""
     return [
         RecoveryConstraint(
             str(rule.get("id", "unknown")), tuple(rule.get("prefixes", ())),
@@ -60,10 +66,12 @@ def constraints_from_config(config: AppConfig) -> list[RecoveryConstraint]:
 
 
 def normalize_text(text: str) -> str:
+    """Normalize escape sequences and invisible control characters."""
     normalized = unicodedata.normalize("NFKC", text)
     normalized = normalized.replace("\u200b", "").replace("\u200c", "").replace("\u200d", "").replace("\ufeff", "")
 
     def replace_escape(match: re.Match[str]) -> str:
+        """Escape replacement hook used by ``normalize_text``."""
         token = match.group(0)
         if token in {"\\n", "\\r", "\\t"}:
             return {"\\n": "\n", "\\r": "\r", "\\t": "\t"}[token]
@@ -76,6 +84,7 @@ def normalize_text(text: str) -> str:
 
 
 def decode_exact(value: str, encoding: str, max_output: int) -> str:
+    """Decode one payload under the given encoding, or return None."""
     if encoding in {"base64", "base64url"}:
         padded = value + "=" * (-len(value) % 4)
         if encoding == "base64url":
@@ -97,6 +106,7 @@ def decode_exact(value: str, encoding: str, max_output: int) -> str:
 
 
 def recover_record(record: CarrierRecord, config: AppConfig) -> list[RecoveredText]:
+    """Type-aware bounded recovery for one carrier record."""
     normalized = normalize_text(record.text)
     initial_steps: list[RecoveryStep] = []
     if normalized != record.text:

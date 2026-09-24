@@ -1,3 +1,5 @@
+"""Experiment runner for RQ1 benchmarks and RQ2 ablation profiles."""
+
 from __future__ import annotations
 
 import hashlib
@@ -15,6 +17,7 @@ from .metrics import compute_metrics, score_sets
 
 
 class ExperimentRunner:
+    """Runs RQ1 benchmarks and RQ2 ablations over a manifest."""
     def __init__(self, config: AppConfig):
         self.config = config
 
@@ -27,6 +30,7 @@ class ExperimentRunner:
         return digest.hexdigest()
 
     def run(self, manifest: DatasetManifest, profile: str = "full") -> list[ExperimentResult]:
+        """Execute one profile over the manifest; return per-artifact results."""
         if profile not in ABLATION_PROFILES:
             raise ValueError(f"unknown profile: {profile}")
         expected_occurrence: set[tuple[str, ...]] = set()
@@ -68,4 +72,5 @@ class ExperimentRunner:
         return output
 
     def ablate(self, manifest: DatasetManifest) -> dict[str, list[dict[str, Any]]]:
+        """Execute every ablation profile; return per-profile results."""
         return {profile: [asdict(result) for result in self.run(manifest, profile)] for profile in ABLATION_PROFILES}

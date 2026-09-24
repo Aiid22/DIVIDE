@@ -1,3 +1,5 @@
+"""Offline checksum validators; GitHub CRC32-Base62 token checksum (paper Sec. 2.3)."""
+
 from __future__ import annotations
 
 import zlib
@@ -22,6 +24,7 @@ class GitHubTokenChecksum:
         self.alphabet = alphabet
 
     def supports(self, credential_type: str, format_version: str | None = None) -> bool:
+        """Return True for the GitHub CRC32-Base62 format."""
         return "github" in credential_type.casefold() and format_version in {None, "checksum-v1"}
 
     def _base62(self, value: int) -> str:
@@ -34,10 +37,12 @@ class GitHubTokenChecksum:
         return output
 
     def suffix(self, payload: str) -> str:
+        """Return the token suffix carrying the checksum."""
         crc = zlib.crc32(payload.encode("utf-8")) & 0xFFFFFFFF
         return self._base62(crc).rjust(6, self.alphabet[0])[-6:]
 
     def validate(self, value: str, *, format_version: str | None = None) -> tuple[bool, str]:
+        """Verify the CRC32-Base62 suffix without provider contact."""
         if len(value) < 7:
             return False, "value is shorter than the six-character checksum suffix"
         expected = self.suffix(value[:-6])
@@ -46,12 +51,14 @@ class GitHubTokenChecksum:
 
 
 class ChecksumRegistry:
+    """Dispatches checksum validation by format identifier."""
     def __init__(self, validators: Iterable[ChecksumValidator] = (GitHubTokenChecksum(),)):
         self.validators = tuple(validators)
 
     def validate(
         self, validator_id: str, value: str, credential_type: str, format_version: str | None = None,
     ) -> tuple[bool, str]:
+        """Validate ``value`` with the matching checksum format."""
         for validator in self.validators:
             if validator.validator_id == validator_id and validator.supports(credential_type, format_version):
                 return validator.validate(value, format_version=format_version)

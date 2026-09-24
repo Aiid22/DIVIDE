@@ -1,3 +1,10 @@
+"""Application configuration: limits, OCR/LLM settings, detection weights, rules.
+
+``load_config`` deep-merges the packaged ``default_rules.yaml`` with an
+optional user override file, so every knob in the paper's resource-budget
+discussion is expressible without touching code.
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -11,6 +18,8 @@ import yaml
 
 @dataclass(slots=True)
 class Limits:
+    """Hard resource budgets enforced at every stage of the pipeline."""
+
     max_depth: int = 5
     max_object_size: int = 50 * 1024 * 1024
     max_expanded_size: int = 250 * 1024 * 1024
@@ -34,6 +43,7 @@ class Limits:
 
 @dataclass(slots=True)
 class OCRSettings:
+    """Tesseract OCR engine settings (language pack, confidence floor)."""
     enabled: bool = True
     language: str = "eng"
     min_confidence: float = 35.0
@@ -41,6 +51,7 @@ class OCRSettings:
 
 @dataclass(slots=True)
 class LLMSettings:
+    """Recovery-planner backend settings; ``planner='null'`` keeps scans offline."""
     base_url: str | None = None
     model: str | None = None
     api_key_env: str = "DIVIDE_LLM_API_KEY"
@@ -53,6 +64,7 @@ class LLMSettings:
 
 @dataclass(slots=True)
 class DetectionSettings:
+    """Verification thresholds and context weights (paper Sec. 2.3)."""
     minimum_score: float = 0.65
     minimum_generic_entropy: float = 3.2
     show_secrets: bool = False
@@ -66,30 +78,28 @@ class DetectionSettings:
 
 @dataclass(slots=True)
 class ExperimentSettings:
+    """Seed and counting units for reproducible evaluation."""
     random_seed: int = 20250301
     raw_unit: str = "occurrence"
     unique_unit: str = "project_unique"
 
 
 @dataclass(slots=True)
-class OutputSettings:
-    language: str = "en"
-
-
-@dataclass(slots=True)
 class AppConfig:
+    """Top-level configuration assembled from YAML rule files."""
+
     limits: Limits = field(default_factory=Limits)
     ocr: OCRSettings = field(default_factory=OCRSettings)
     llm: LLMSettings = field(default_factory=LLMSettings)
     detection: DetectionSettings = field(default_factory=DetectionSettings)
     experiment: ExperimentSettings = field(default_factory=ExperimentSettings)
-    output: OutputSettings = field(default_factory=OutputSettings)
     credential_rules: list[dict[str, Any]] = field(default_factory=list)
     positive_context: list[str] = field(default_factory=list)
     negative_context: list[str] = field(default_factory=list)
     hard_placeholders: list[str] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
+        """Provenance-friendly snapshot embedded in every scan report."""
         return {
             "limits": asdict(self.limits),
             "ocr": asdict(self.ocr),
@@ -100,7 +110,6 @@ class AppConfig:
             },
             "detection": asdict(self.detection),
             "experiment": asdict(self.experiment),
-            "output": asdict(self.output),
             "credential_rule_count": len(self.credential_rules),
         }
 
@@ -116,10 +125,12 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
 
 
 def default_config_path() -> Path:
+    """Return the packaged default configuration path."""
     return Path(str(files("divide").joinpath("default_rules.yaml")))
 
 
 def load_config(path: Path | None = None) -> AppConfig:
+    """Load packaged defaults, then deep-merge the user override on top."""
     with default_config_path().open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle) or {}
     if path:
@@ -131,7 +142,6 @@ def load_config(path: Path | None = None) -> AppConfig:
         llm=LLMSettings(**data.get("llm", {})),
         detection=DetectionSettings(**data.get("detection", {})),
         experiment=ExperimentSettings(**data.get("experiment", {})),
-        output=OutputSettings(**data.get("output", {})),
         credential_rules=data.get("credential_rules", []),
         positive_context=data.get("positive_context", []),
         negative_context=data.get("negative_context", []),

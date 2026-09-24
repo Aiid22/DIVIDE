@@ -1,3 +1,5 @@
+"""LLM recovery planner: a locally deployed model proposes plans, a deterministic executor replays them (paper Sec. 2.2)."""
+
 from __future__ import annotations
 
 import hashlib
@@ -57,11 +59,13 @@ PLAN_SCHEMA: dict[str, Any] = {
 
 @dataclass(slots=True)
 class PlannerResult:
+    """Planner output: recovered texts plus warnings."""
     recovered: list[tuple[CarrierRecord, RecoveredText]]
     warnings: list[ScanWarning]
 
 
 class DeterministicPlanExecutor:
+    """Replays validated plans through fixed operations only."""
     allowed_substitutions = {
         "0": {"O"}, "O": {"0"}, "1": {"l", "I"}, "l": {"1", "I"}, "I": {"1", "l"},
     }
@@ -73,6 +77,7 @@ class DeterministicPlanExecutor:
     def execute(
         self, plan_value: dict[str, Any], group: RelatedGroup, records: dict[str, CarrierRecord],
     ) -> tuple[CarrierRecord, RecoveredText]:
+        """Execute a validated plan against its related group."""
         wrapper = {"plans": [plan_value]}
         errors = sorted(self.validator.iter_errors(wrapper), key=lambda item: list(item.path))
         if errors:
@@ -158,9 +163,11 @@ def _profile_artifact_hashes() -> dict[str, str]:
 
 
 class NullRecoveryPlanner:
+    """Offline no-op planner used when no model is configured."""
     planner_id = "null"
 
     def status(self) -> dict[str, Any]:
+        """Return planner identity and availability for provenance."""
         return {
             "planner_id": self.planner_id, "status": "model_unavailable",
             "reason": "model execution disabled by default", "profile": "qwen3-32b-awq-vllm",
@@ -168,10 +175,12 @@ class NullRecoveryPlanner:
         }
 
     def recover(self, records: list[CarrierRecord]) -> PlannerResult:
+        """No-op recovery; returns an empty result."""
         return PlannerResult([], [])
 
 
 class OpenAIRecoveryPlanner:
+    """Queries an OpenAI-compatible endpoint for recovery plans."""
     planner_id = "openai-compatible-vllm"
 
     def __init__(self, config: AppConfig):
@@ -179,6 +188,7 @@ class OpenAIRecoveryPlanner:
         self.executor = DeterministicPlanExecutor(config)
 
     def status(self) -> dict[str, Any]:
+        """Return planner identity and availability for provenance."""
         enabled = bool(self.config.llm.base_url and self.config.llm.model and self.config.llm.planner != "null")
         return {
             "planner_id": self.planner_id, "status": "available" if enabled else "model_unavailable",
@@ -187,6 +197,7 @@ class OpenAIRecoveryPlanner:
         }
 
     def recover(self, records: list[CarrierRecord]) -> PlannerResult:
+        """Attempt plan-based recovery over related groups."""
         if self.status()["status"] != "available":
             return PlannerResult([], [])
         endpoint = self.config.llm.base_url or ""
@@ -240,10 +251,13 @@ class LLMPlanner:
 
     @property
     def enabled(self) -> bool:
+        """Return True when a usable backend is configured."""
         return self.delegate.status()["status"] == "available"
 
     def status(self) -> dict[str, Any]:
+        """Return the delegate planner's status for provenance."""
         return self.delegate.status()
 
     def recover(self, records: list[CarrierRecord]) -> PlannerResult:
+        """Delegate recovery to the selected planner."""
         return self.delegate.recover(records)

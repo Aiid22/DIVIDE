@@ -1,3 +1,5 @@
+"""Dataset manifest loading and schema validation (fingerprints only, no plaintext secrets)."""
+
 from __future__ import annotations
 
 import json
@@ -33,6 +35,7 @@ MANIFEST_SCHEMA: dict[str, Any] = {
 
 @dataclass(frozen=True, slots=True)
 class SecretAnnotation:
+    """One ground-truth secret, represented by fingerprint only."""
     fingerprint: str
     location: str
     credential_type: str = "unknown"
@@ -40,6 +43,7 @@ class SecretAnnotation:
 
 @dataclass(frozen=True, slots=True)
 class ManifestArtifact:
+    """One dataset artifact and its expected content hash."""
     artifact_id: str
     project_id: str
     relative_path: str
@@ -50,6 +54,7 @@ class ManifestArtifact:
 
 @dataclass(frozen=True, slots=True)
 class DatasetManifest:
+    """Validated manifest binding artifacts to secret annotations."""
     schema_version: str
     dataset_id: str
     root: Path
@@ -58,6 +63,7 @@ class DatasetManifest:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def resolve_artifact(self, artifact: ManifestArtifact) -> Path:
+        """Resolve an artifact entry to an absolute path."""
         relative = PurePosixPath(artifact.relative_path)
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError(f"unsafe artifact relative_path: {artifact.relative_path}")
@@ -69,6 +75,7 @@ class DatasetManifest:
 
 
 def load_manifest(path: Path) -> DatasetManifest:
+    """Load and schema-validate a dataset manifest from disk."""
     value = json.loads(path.read_text(encoding="utf-8"))
     Draft202012Validator(MANIFEST_SCHEMA).validate(value)
     root = Path(value["root"])

@@ -1,3 +1,5 @@
+"""Carrier handler registry with dependency-based capability probing."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -13,6 +15,7 @@ from .detector import detect
 
 @dataclass(frozen=True, slots=True)
 class HandlerSpec:
+    """CarrierHandler adapter pairing a handler with probe metadata."""
     handler_id: str
     kinds: tuple[str, ...]
     formats: tuple[str, ...]
@@ -43,6 +46,7 @@ class DeclaredCarrierHandler(CarrierHandler):
         return missing
 
     def capability(self) -> Capability:
+        """Report the handler's capability tier."""
         missing = self._missing()
         status = self.spec.missing_status if missing else self.spec.installed_status
         reason = self.spec.reason
@@ -54,6 +58,7 @@ class DeclaredCarrierHandler(CarrierHandler):
         )
 
     def probe(self, obj: CarrierObject) -> ProbeResult:
+        """Probe the object type against this spec's kinds."""
         result = detect(obj.data, obj.name)
         return ProbeResult(
             result.kind in self.spec.kinds, result.kind, result.mime, result.confidence,
@@ -61,6 +66,7 @@ class DeclaredCarrierHandler(CarrierHandler):
         )
 
     def validate_structure(self, obj: CarrierObject, probe: ProbeResult) -> tuple[bool, str]:
+        """Weigh structural evidence against extension/MIME hints."""
         if probe.structural_valid:
             return True, "; ".join(probe.evidence)
         if probe.detected_type in {"zip", "jar", "apk", "tar", "gzip", "7z", "rar", "rpm", "iso"}:
@@ -68,25 +74,30 @@ class DeclaredCarrierHandler(CarrierHandler):
         return probe.matched, "extension/MIME match without a complete structural proof"
 
     def extract_records(self, obj: CarrierObject, context: Any) -> Iterable[CarrierRecord]:
+        """Delegate extraction to the execution context."""
         return context.extract_records(self, obj)
 
     def enumerate_children(self, obj: CarrierObject, context: Any) -> Iterable[CarrierObject]:
+        """Delegate enumeration to the execution context."""
         return context.enumerate_children(self, obj)
 
 
 class HandlerRegistry:
+    """Carrier-type to handler dispatch with capability probing."""
     def __init__(self, handlers: Iterable[CarrierHandler] = ()):
         self._handlers: list[CarrierHandler] = []
         for handler in handlers:
             self.register(handler)
 
     def register(self, handler: CarrierHandler) -> None:
+        """Register a handler under its supported carrier types."""
         if any(item.handler_id == handler.handler_id for item in self._handlers):
             raise ValueError(f"duplicate carrier handler: {handler.handler_id}")
         self._handlers.append(handler)
         self._handlers.sort(key=lambda item: item.priority)
 
     def select(self, obj: CarrierObject) -> tuple[CarrierHandler, ProbeResult]:
+        """Return the handler spec for a detected carrier type."""
         fallback: tuple[CarrierHandler, ProbeResult] | None = None
         for handler in self._handlers:
             probe = handler.probe(obj)
@@ -101,10 +112,12 @@ class HandlerRegistry:
         raise LookupError(f"no carrier handler accepted {obj.nested_path}")
 
     def capabilities(self) -> list[dict[str, Any]]:
+        """Return capability rows for all registered handlers."""
         return [handler.capability().to_dict() for handler in self._handlers]
 
 
 def default_registry() -> HandlerRegistry:
+    """Build a registry with every built-in handler registered."""
     specs = [
         HandlerSpec("structured-text", ("text", "json", "yaml", "xml", "csv"),
                     ("source", "TXT", "JSON", "CSV", "XML", "YAML", "SVG", "PEM"), "stdlib/defusedxml/PyYAML", priority=10),

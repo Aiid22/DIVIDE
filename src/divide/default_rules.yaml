@@ -50,8 +50,6 @@ experiment:
   raw_unit: occurrence
   unique_unit: project_unique
 
-output:
-  language: en
 
 positive_context:
   - api_key
