@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from divide.config import AppConfig
+from divide.i18n import parse_language
 from divide.localization import ArtifactLocalizer
 from divide.models import Candidate, RecoveryTrace, ScanReport, ScanWarning
 from divide.provenance import experiment_provenance
@@ -92,6 +93,7 @@ class DividePipeline:
             duplicate_candidates=candidate_duplicates + verified.duplicates, config_summary=self.config.summary(),
             provenance=provenance, capabilities=capabilities, candidate_decisions=verified.decisions,
             ablation_profile=profile.name, engineering_assumptions=self.config.engineering_assumptions,
+            display_language=parse_language(self.config.output.language).value,
         )
 
 

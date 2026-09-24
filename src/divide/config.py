@@ -73,12 +73,18 @@ class ExperimentSettings:
 
 
 @dataclass(slots=True)
+class OutputSettings:
+    language: str = "en"
+
+
+@dataclass(slots=True)
 class AppConfig:
     limits: Limits = field(default_factory=Limits)
     ocr: OCRSettings = field(default_factory=OCRSettings)
     llm: LLMSettings = field(default_factory=LLMSettings)
     detection: DetectionSettings = field(default_factory=DetectionSettings)
     experiment: ExperimentSettings = field(default_factory=ExperimentSettings)
+    output: OutputSettings = field(default_factory=OutputSettings)
     credential_rules: list[dict[str, Any]] = field(default_factory=list)
     positive_context: list[str] = field(default_factory=list)
     negative_context: list[str] = field(default_factory=list)
@@ -96,6 +102,7 @@ class AppConfig:
             },
             "detection": asdict(self.detection),
             "experiment": asdict(self.experiment),
+            "output": asdict(self.output),
             "credential_rule_count": len(self.credential_rules),
             "engineering_assumptions": self.engineering_assumptions,
         }
@@ -127,6 +134,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         llm=LLMSettings(**data.get("llm", {})),
         detection=DetectionSettings(**data.get("detection", {})),
         experiment=ExperimentSettings(**data.get("experiment", {})),
+        output=OutputSettings(**data.get("output", {})),
         credential_rules=data.get("credential_rules", []),
         positive_context=data.get("positive_context", []),
         negative_context=data.get("negative_context", []),

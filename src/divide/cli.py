@@ -9,6 +9,7 @@ import typer
 
 from divide.config import load_config
 from divide.evaluation import ExperimentRunner, load_manifest
+from divide.i18n import OutputLanguage, message, parse_language
 from divide.localization import ArtifactLocalizer
 from divide.pipeline import DividePipeline
 from divide.reporting import write_json_data, write_json_report
@@ -16,7 +17,7 @@ from divide.rulesets import CompositeRuleProvider, ConfigRuleProvider, GitleaksR
 
 
 app = typer.Typer(
-    name="divide", help="Carrier-aware recovery and offline verification of scanner-blind secrets.", no_args_is_help=True,
+    name="divide", help="We recover and verify scanner-blind secrets across heterogeneous carriers.", no_args_is_help=True,
 )
 rules_app = typer.Typer(name="rules", help="Audit the versioned rule library.", no_args_is_help=True)
 app.add_typer(rules_app, name="rules")
@@ -38,9 +39,14 @@ def scan(
     timeout: Optional[float] = typer.Option(None, "--timeout", min=.1),
     show_secrets: bool = typer.Option(False, "--show-secrets"),
     fail_on_findings: bool = typer.Option(False, "--fail-on-findings"),
+    language: Optional[OutputLanguage] = typer.Option(
+        None, "--language", "--lang", help="Display language: en (default) or zh.",
+    ),
 ) -> None:
     """Scan TARGET and write a schema-2.0 redacted JSON report."""
     config = load_config(config_path)
+    selected_language = language or parse_language(config.output.language)
+    config.output.language = selected_language.value
     if max_depth is not None:
         config.limits.max_depth = max_depth
     if max_object_size is not None:
@@ -62,8 +68,11 @@ def scan(
     config.detection.show_secrets = show_secrets
     report = DividePipeline(config).scan(target, timeout_seconds=timeout)
     write_json_report(report, output, show_secrets=show_secrets)
-    typer.echo(f"Scanned {report.scanned_objects} objects; {len(report.findings)} findings; {len(report.warnings)} warnings.")
-    typer.echo(f"JSON report: {output}")
+    typer.echo(message(
+        "scan_summary", selected_language, objects=report.scanned_objects,
+        findings=len(report.findings), warnings=len(report.warnings),
+    ))
+    typer.echo(message("json_report", selected_language, path=output))
     if fail_on_findings and report.findings:
         raise typer.Exit(code=1)
 
@@ -72,14 +81,24 @@ def scan(
 def capabilities(
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
     config_path: Optional[Path] = typer.Option(None, "--config"),
+    language: Optional[OutputLanguage] = typer.Option(
+        None, "--language", "--lang", help="Display language: en (default) or zh.",
+    ),
 ) -> None:
     """Report full/partial/fallback/unavailable carrier adapters."""
-    rows = ArtifactLocalizer(load_config(config_path)).capabilities()
+    config = load_config(config_path)
+    selected_language = language or parse_language(config.output.language)
+    config.output.language = selected_language.value
+    rows = ArtifactLocalizer(config).capabilities()
     if json_output:
-        typer.echo(json.dumps({"schema_version": "2.0", "capabilities": rows}, ensure_ascii=False, indent=2))
+        typer.echo(json.dumps(
+            {"schema_version": "2.0", "display_language": selected_language.value, "capabilities": rows},
+            ensure_ascii=False, indent=2,
+        ))
         return
     for row in rows:
-        typer.echo(f"{row['handler_id']:<20} {row['status']:<11} {', '.join(row['formats'])}")
+        status = message(f"capability_status.{row['status']}", selected_language)
+        typer.echo(f"{row['handler_id']:<20} {status:<11} {', '.join(row['formats'])}")
 
 
 @app.command()
@@ -87,11 +106,20 @@ def benchmark(
     manifest: Path = typer.Argument(..., help="Dataset manifest containing fingerprints, not plaintext secrets."),
     output: Path = typer.Option(Path("divide-benchmark.json"), "--output", "-o"),
     config_path: Optional[Path] = typer.Option(None, "--config"),
+    language: Optional[OutputLanguage] = typer.Option(
+        None, "--language", "--lang", help="Display language: en (default) or zh.",
+    ),
 ) -> None:
     """Run RQ1 raw-occurrence and project-unique evaluation."""
-    results = ExperimentRunner(load_config(config_path)).run(load_manifest(manifest), "full")
-    write_json_data({"schema_version": "2.0", "status": "executed", "results": [asdict(item) for item in results]}, output)
-    typer.echo(f"Benchmark result: {output}")
+    config = load_config(config_path)
+    selected_language = language or parse_language(config.output.language)
+    config.output.language = selected_language.value
+    results = ExperimentRunner(config).run(load_manifest(manifest), "full")
+    write_json_data({
+        "schema_version": "2.0", "display_language": selected_language.value,
+        "status": "executed", "results": [asdict(item) for item in results],
+    }, output)
+    typer.echo(message("benchmark_result", selected_language, path=output))
 
 
 @app.command()
@@ -99,23 +127,38 @@ def ablate(
     manifest: Path = typer.Argument(...),
     output: Path = typer.Option(Path("divide-ablation.json"), "--output", "-o"),
     config_path: Optional[Path] = typer.Option(None, "--config"),
+    language: Optional[OutputLanguage] = typer.Option(
+        None, "--language", "--lang", help="Display language: en (default) or zh.",
+    ),
 ) -> None:
     """Run full, no-media, no-recovery, and no-post-filter profiles."""
-    results = ExperimentRunner(load_config(config_path)).ablate(load_manifest(manifest))
-    write_json_data({"schema_version": "2.0", "status": "executed", "profiles": results}, output)
-    typer.echo(f"Ablation result: {output}")
+    config = load_config(config_path)
+    selected_language = language or parse_language(config.output.language)
+    config.output.language = selected_language.value
+    results = ExperimentRunner(config).ablate(load_manifest(manifest))
+    write_json_data({
+        "schema_version": "2.0", "display_language": selected_language.value,
+        "status": "executed", "profiles": results,
+    }, output)
+    typer.echo(message("ablation_result", selected_language, path=output))
 
 
 @rules_app.command("audit")
 def rules_audit(
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
     config_path: Optional[Path] = typer.Option(None, "--config"),
+    language: Optional[OutputLanguage] = typer.Option(
+        None, "--language", "--lang", help="Display language: en (default) or zh.",
+    ),
 ) -> None:
     """Check rule origins, conflicts, compilation status, hashes, and licenses."""
     config = load_config(config_path)
+    selected_language = language or parse_language(config.output.language)
+    config.output.language = selected_language.value
     report = CompositeRuleProvider([ConfigRuleProvider(config), GitleaksRuleProvider()]).audit()
+    payload = {"schema_version": "2.0", "display_language": selected_language.value, **report}
     if output:
-        write_json_data({"schema_version": "2.0", **report}, output)
-        typer.echo(f"Rule audit: {output}")
+        write_json_data(payload, output)
+        typer.echo(message("rule_audit", selected_language, path=output))
     else:
-        typer.echo(json.dumps({"schema_version": "2.0", **report}, ensure_ascii=False, indent=2))
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))

@@ -5,11 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema_version", "generated_at", "target", "config", "provenance", "capabilities",
+    "schema_version", "display_language", "generated_at", "target", "config", "provenance", "capabilities",
     "candidate_decisions", "ablation_profile", "engineering_assumptions", "summary", "findings", "warnings"
   ],
   "properties": {
     "schema_version": {"const": "2.0"},
+    "display_language": {"enum": ["en", "zh"]},
     "generated_at": {"type": "string", "format": "date-time"},
     "target": {"type": "string"},
     "config": {"type": "object"},

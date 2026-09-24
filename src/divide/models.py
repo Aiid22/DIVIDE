@@ -202,10 +202,12 @@ class ScanReport:
     candidate_decisions: list[VerificationDecision] = field(default_factory=list)
     ablation_profile: str = "full"
     engineering_assumptions: list[str] = field(default_factory=list)
+    display_language: Literal["en", "zh"] = "en"
 
     def to_dict(self, show_secrets: bool = False) -> dict[str, Any]:
         return {
             "schema_version": self.schema_version,
+            "display_language": self.display_language,
             "generated_at": self.generated_at,
             "target": self.target,
             "config": self.config_summary,

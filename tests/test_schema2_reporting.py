@@ -10,6 +10,7 @@ def test_schema2_defaults_to_redacted_and_exposes_audit_sections() -> None:
     report = ScanReport("/target", [], [], 0, 0, 0, 0, {})
     value = report.to_dict()
     assert value["schema_version"] == "2.0"
+    assert value["display_language"] == "en"
     assert "provenance" in value
     assert "capabilities" in value
     assert "candidate_decisions" in value

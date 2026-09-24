@@ -9,7 +9,7 @@ prompt_version: divide-recovery-plan-v1
 response_schema: ../schemas/recovery_plan.schema.json
 allowed_operations: [concat, decode, substitute]
 remote_allowed_by_default: false
-execution_in_this_reproduction: false
+execution_in_this_artifact: false
 notes:
   - This is an interface profile, not a bundled model or validated hardware configuration.
   - Model output is treated as an untrusted plan and executed only after deterministic validation.

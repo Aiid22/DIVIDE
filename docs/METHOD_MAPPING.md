@@ -1,5 +1,9 @@
 # 论文方法—实现映射
 
+[English](METHOD_MAPPING.en.md) | [中文](METHOD_MAPPING.md)
+
+我们用本表记录论文方法与参考原型的逐项对应关系及证据边界。
+
 | 论文构件 | 实现入口 | 忠实性说明 |
 |---|---|---|
 | Fig. 2 三阶段架构 | `pipeline.py` | 定位、恢复、验证按固定阶段串联，保留 provenance。 |
@@ -16,4 +20,4 @@
 | GitHub checksum | `rulesets/checksums.py` | CRC32→Base62→末六位；字母表为显式 EA-005。 |
 | RQ1/RQ2 | `evaluation/` | raw occurrence、project unique 与四种固定消融。 |
 
-本表只陈述源码对应关系，不构成结果验证。状态见 `REPRODUCIBILITY_STATUS.md`。
+本表只陈述源码对应关系，不构成结果验证。我们的当前状态见 `REPRODUCIBILITY_STATUS.md`。

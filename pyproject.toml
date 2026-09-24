@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "divide-secret-discovery"
-version = "0.2.0"
-description = "An auditable method-faithful reproduction package for carrier-aware secret discovery."
+version = "0.3.0"
+description = "Our auditable research artifact for carrier-aware secret discovery."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

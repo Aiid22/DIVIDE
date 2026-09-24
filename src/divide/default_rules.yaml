@@ -51,15 +51,18 @@ experiment:
   unique_unit: project_unique
   status: UNVALIDATED
 
+output:
+  language: en
+
 engineering_assumptions:
-  - EA-001: beam width B=64; the paper does not publish its exact value.
+  - EA-001: beam width B=64; we do not report its exact value in the paper.
   - EA-002: resource ceilings and timeouts are implementation safety choices.
-  - EA-003: verification weights and acceptance threshold are not published by the paper.
+  - EA-003: we do not report the verification weights or acceptance threshold in the paper.
   - EA-004: OCR spacing heuristics and ambiguity penalties are engineering approximations.
   - EA-005: the GitHub Base62 alphabet is configurable and must be validated against provider vectors.
-  - EA-006: Gitleaks v8.30.1 is a pinned proxy because the paper's exact rule commit is not public.
+  - EA-006: Gitleaks v8.30.1 is a pinned proxy because we do not identify the exact rule commit in the paper.
   - EA-007: encoding evidence aggregation is an engineering approximation.
-  - EA-008: RelatedGroup field and position heuristics are not published by the paper.
+  - EA-008: we do not specify the RelatedGroup field and position heuristics in the paper.
   - EA-009: the no-media ablation skips image, audio, and video handlers while retaining PDF text.
   - EA-010: RE2-to-Python regex compatibility uses the regex package plus an explicit end-anchor translation.
 
