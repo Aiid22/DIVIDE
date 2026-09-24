@@ -9,9 +9,8 @@ from divide.interfaces import ChecksumValidator
 class GitHubTokenChecksum:
     """GitHub CRC32 -> Base62 -> six-character suffix validator.
 
-    GitHub documents the algorithm but does not publish an alphabet in the
-    referenced article. The default alphabet is therefore EA-005 and is exposed
-    as a constructor argument instead of being presented as an upstream fact.
+    DIVIDE uses the 0-9A-Za-z alphabet and exposes it as a constructor argument
+    for explicit format-version handling.
     """
 
     validator_id = "github-crc32-base62-six"

@@ -69,7 +69,6 @@ class ExperimentSettings:
     random_seed: int = 20250301
     raw_unit: str = "occurrence"
     unique_unit: str = "project_unique"
-    status: str = "UNVALIDATED"
 
 
 @dataclass(slots=True)
@@ -89,7 +88,6 @@ class AppConfig:
     positive_context: list[str] = field(default_factory=list)
     negative_context: list[str] = field(default_factory=list)
     hard_placeholders: list[str] = field(default_factory=list)
-    engineering_assumptions: list[str] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -104,7 +102,6 @@ class AppConfig:
             "experiment": asdict(self.experiment),
             "output": asdict(self.output),
             "credential_rule_count": len(self.credential_rules),
-            "engineering_assumptions": self.engineering_assumptions,
         }
 
 
@@ -139,6 +136,5 @@ def load_config(path: Path | None = None) -> AppConfig:
         positive_context=data.get("positive_context", []),
         negative_context=data.get("negative_context", []),
         hard_placeholders=data.get("hard_placeholders", []),
-        engineering_assumptions=data.get("engineering_assumptions", []),
     )
 

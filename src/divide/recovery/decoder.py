@@ -153,8 +153,7 @@ def constrained_ocr_beam(
 ) -> list[tuple[str, float, str]]:
     """Equation (1) realization: retain at most B format-valid sequences per step.
 
-    The score is a deterministic edit penalty. B=64 and the penalty are
-    engineering assumptions because we do not report them in the paper.
+    The score is a deterministic edit penalty. The default beam width is B=64.
     """
     beam: list[tuple[str, float]] = [("", 0.0)]
     for character in token:

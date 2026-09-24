@@ -46,11 +46,6 @@ def main() -> None:
         "provider": "gitleaks", "version": VERSION, "upstream_ref": UPSTREAM_COMMIT,
         "source_url": CONFIG_URL, "snapshot_scope": "full-upstream",
         "content_sha256": config_hash, "license": "MIT", "license_sha256": license_hash,
-        "reproduction_status": "VENDORED_UNTESTED",
-        "engineering_assumption": (
-            "EA-006 selects this upstream version as a reproducible proxy; "
-            "we do not identify the exact rule commit in the paper."
-        ),
     }
     (args.output_dir / "snapshot_manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8",

@@ -92,8 +92,7 @@ class DividePipeline:
             carrier_records=len(localized.records), raw_candidates=raw_candidate_count,
             duplicate_candidates=candidate_duplicates + verified.duplicates, config_summary=self.config.summary(),
             provenance=provenance, capabilities=capabilities, candidate_decisions=verified.decisions,
-            ablation_profile=profile.name, engineering_assumptions=self.config.engineering_assumptions,
-            display_language=parse_language(self.config.output.language).value,
+            ablation_profile=profile.name, display_language=parse_language(self.config.output.language).value,
         )
 
 

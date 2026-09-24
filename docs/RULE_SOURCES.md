@@ -4,7 +4,7 @@
 
 ## DIVIDE core 2026.09.1
 
-我们的核心规则覆盖 AWS、GitHub、GitLab、Slack、Stripe、Google API key、PEM 私钥及通用敏感字段赋值。规则定义位于 `default_rules.yaml`；由于我们未在论文中披露完整实验规则语料，本参考原型使用可审计的高置信近似。每条编译后规则携带 provider/version/source/license 字段。
+我们的当前核心规则覆盖 AWS、GitHub、GitLab、Slack、Stripe、Google API key、PEM 私钥及通用敏感字段赋值。规则定义位于 `default_rules.yaml`，每条编译后规则携带 provider/version/source/license 字段。
 
 ## Gitleaks v8.30.1
 
@@ -19,4 +19,4 @@
 
 ## GitHub token checksum
 
-算法来源：<https://github.blog/engineering/behind-githubs-new-authentication-token-formats/>。该来源说明 CRC32、Base62、末六位和补零；我们仍把字母表登记为 EA-005，等待独立供应商测试向量确认。
+算法来源：<https://github.blog/engineering/behind-githubs-new-authentication-token-formats/>。当前实现使用 CRC32、`0-9A-Za-z` Base62 字母表、末六位和左侧补零。

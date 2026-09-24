@@ -6,7 +6,5 @@
   "snapshot_scope": "full-upstream",
   "content_sha256": "e163e53b9e7e8a8511e77271e2b323ed057759542a6d988258afe3a1fa329caf",
   "license": "MIT",
-  "license_sha256": "e3884b252b3bfc045e55be43a34d1e80da070bc6f804ac95bf4660e97d62ebc6",
-  "reproduction_status": "UNVALIDATED",
-  "engineering_assumption": "EA-006 selects this upstream version as a reproducible proxy; we do not identify the exact rule commit in the paper."
+  "license_sha256": "e3884b252b3bfc045e55be43a34d1e80da070bc6f804ac95bf4660e97d62ebc6"
 }

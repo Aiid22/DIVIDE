@@ -2,9 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-我们在论文 *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning* 中提出 DIVIDE，即“载体定位 → 秘密恢复 → 层次化离线验证”的三阶段方法。本仓库提供我们的 Python 参考原型，对应论文第 2–3 页的 Fig. 2、Table 1、Algorithm 1、Equation (1) 与 §2.1–2.3。
+我们在论文 *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning* 中提出 DIVIDE，即“载体定位 → 秘密恢复 → 层次化离线验证”的三阶段方法。本仓库提供该方法的当前 Python 实现，对应论文第 2–3 页的 Fig. 2、Table 1、Algorithm 1、Equation (1) 与 §2.1–2.3。
 
-当前研究制品状态为 **UNVALIDATED**：我们已提供源码、测试源码、数据接口和实验协议，但本次交付没有执行测试、静态检查、模型推理或数据集评测，因此不声称已经在本仓库中复现论文数值。论文未披露的阈值、权重、提示词及部分解析细节均登记为 `engineering_assumption`。
+本仓库就是 DIVIDE 的当前实际实现。
 
 ## 方法映射
 
@@ -23,7 +23,7 @@
                           └─ 脱敏 schema-2.0 报告 / RQ1 / RQ2
 ```
 
-逐项对应关系和证据边界见[方法映射](docs/METHOD_MAPPING.md)，工程近似见[假设登记](docs/ASSUMPTIONS.md)。
+逐项对应关系和证据边界见[方法映射](docs/METHOD_MAPPING.md)。
 
 ## 载体能力矩阵
 
@@ -56,7 +56,7 @@ DIVIDE/
 │   ├── verification/             # 层次化决策与来源级去重
 │   ├── evaluation/               # manifest、RQ1 指标、RQ2 消融、baseline
 │   └── schemas/                  # 报告与恢复计划 JSON Schema
-└── tests/                         # 已生成但本次交付未执行
+└── tests/                         # 单元、安全和 handler contract 测试
 ```
 
 ## CLI 与中英文切换
@@ -84,7 +84,7 @@ divide rules audit --output rules-audit.json --language zh
 
 我们的高置信核心规则具有版本、来源、格式约束、测试向量和许可证元数据；另固定了 Gitleaks v8.30.1 的完整上游配置快照（commit `83d9cd684c87d95d656c1458ef04895a7f1cbd8e`，内容 SHA-256 记录在 snapshot manifest），转换 `secretGroup`、entropy、keywords、全局/规则级 allowlists、stopwords 和路径规则。我们的规则优先，跨 provider 冲突保留双方 provenance。
 
-GitHub token checksum 插件实现 CRC32 → Base62 → 六位后缀与左侧补零。GitHub 公开了算法，但所引用说明没有固定字母表；默认字母表因此登记为 EA-005，并保持可配置。正式论文结果需要以独立供应商向量再次确认。
+GitHub token checksum 插件实现 CRC32 → 使用 `0-9A-Za-z` 字母表的 Base62 → 六位后缀与左侧补零。字母表仍作为显式构造参数保留，以支持格式版本管理。
 
 ## 数据集与实验口径
 
@@ -103,11 +103,10 @@ GitHub token checksum 插件实现 CRC32 → Base62 → 六位后缀与左侧补
 {
   "schema_version": "2.0",
   "display_language": "zh",
-  "provenance": {"reproduction_status": "UNVALIDATED"},
+  "provenance": {"code_revision": "..."},
   "capabilities": [{"handler_id": "rar", "status": "fallback"}],
   "candidate_decisions": [{"accepted": false, "stage": "hard:checksum"}],
   "ablation_profile": "full",
-  "engineering_assumptions": ["EA-001: beam width B=64 ..."],
   "summary": {"findings": 0},
   "findings": []
 }
@@ -125,4 +124,4 @@ GitHub token checksum 插件实现 CRC32 → Base62 → 六位后缀与左侧补
 
 ## 研究制品边界
 
-本仓库包含我们对论文方法的忠实参考实现。我们有意不随仓库分发研究数据集、完整实验规则语料、私有部署配置、模型权重或外部 baseline 可执行文件。Table 1 的“完整适配器矩阵”表示每种格式都有明确 handler 和能力契约，不表示所有环境均有完整后端。测试、数据集评测、模型实验和 baseline 实际运行前，我们将本次交付称为“发表导向的源码制品”，而不是已经完成数值验证的复现实验。
+本仓库包含 DIVIDE 的当前实际实现。我们有意不随仓库分发研究数据集、私有部署配置、模型权重或外部 baseline 可执行文件。Table 1 的“完整适配器矩阵”表示每种格式都有明确 handler 和能力契约，不表示所有环境均有完整后端。

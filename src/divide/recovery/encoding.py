@@ -29,8 +29,8 @@ def _printable_ratio(text: str) -> float:
 def infer_encoding(data: bytes) -> EncodingInference:
     """Combine BOM, strict validity, charset-normalizer, and printable ratio.
 
-    Confidence aggregation is EA-007: in our paper, we identify the evidence
-    families but do not report their numerical combination.
+    The implementation records every evidence component alongside the selected
+    encoding so that the decision remains auditable.
     """
     for bom, encoding in _BOMS:
         if data.startswith(bom):

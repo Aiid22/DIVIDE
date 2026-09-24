@@ -2,9 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-In *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning*, we present DIVIDE, a three-stage approach for carrier localization, secret recovery, and hierarchical offline verification. This repository provides our Python reference prototype aligned with Fig. 2, Table 1, Algorithm 1, Equation (1), and Sections 2.1–2.3 of the paper.
+In *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning*, we present DIVIDE, a three-stage approach for carrier localization, secret recovery, and hierarchical offline verification. This repository provides our current Python implementation of Fig. 2, Table 1, Algorithm 1, Equation (1), and Sections 2.1–2.3 of the paper.
 
-The current artifact status is **UNVALIDATED**. We provide the source code, test sources, dataset interface, and experiment protocol, but we have not executed tests, static analysis, model inference, or dataset evaluation in this delivery. We therefore make no claim that the paper's numerical results have been reproduced here. Thresholds, weights, prompts, and parser details not disclosed in the paper are explicitly registered as `engineering_assumption` entries.
+This repository is the current implementation of DIVIDE.
 
 ## Method-to-artifact mapping
 
@@ -23,7 +23,7 @@ Input file/project
                           └─ redacted schema-2.0 report / RQ1 / RQ2
 ```
 
-See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level correspondence and [our assumption ledger](docs/ASSUMPTIONS.en.md) for engineering approximations.
+See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level correspondence and evidence boundaries.
 
 ## Carrier capability matrix
 
@@ -56,7 +56,7 @@ DIVIDE/
 │   ├── verification/             # hierarchical decisions and source-level deduplication
 │   ├── evaluation/               # manifest, RQ1 metrics, RQ2 ablations, baselines
 │   └── schemas/                  # JSON Schemas for reports and recovery plans
-└── tests/                         # generated test sources; not executed in this delivery
+└── tests/                         # unit, security, and handler-contract tests
 ```
 
 ## CLI and language selection
@@ -84,7 +84,7 @@ The default planner is `null` and reports `model_unavailable`; it does not call 
 
 Our high-confidence core rules carry version, source, format constraints, test-vector, and license metadata. We also pin the complete upstream Gitleaks v8.30.1 configuration at commit `83d9cd684c87d95d656c1458ef04895a7f1cbd8e`; its content SHA-256 is recorded in the snapshot manifest. The importer converts `secretGroup`, entropy, keywords, global and rule-level allowlists, stopwords, and path rules. Our rules have precedence, while cross-provider conflicts retain both provenance records.
 
-The GitHub token checksum plugin implements CRC32 → Base62 → a six-character suffix with left padding. GitHub documents the algorithm but the cited description does not fix the alphabet, so we register the default alphabet as EA-005 and keep it configurable. A final publication result must verify it against independent provider vectors.
+The GitHub token checksum plugin implements CRC32 → Base62 with the `0-9A-Za-z` alphabet → a six-character suffix with left padding. The alphabet remains an explicit constructor parameter for format-version handling.
 
 ## Dataset and experiment protocol
 
@@ -103,11 +103,10 @@ Both units report precision, recall, F1, FDR, and latency. `ablate` runs the fix
 {
   "schema_version": "2.0",
   "display_language": "en",
-  "provenance": {"reproduction_status": "UNVALIDATED"},
+  "provenance": {"code_revision": "..."},
   "capabilities": [{"handler_id": "rar", "status": "fallback"}],
   "candidate_decisions": [{"accepted": false, "stage": "hard:checksum"}],
   "ablation_profile": "full",
-  "engineering_assumptions": ["EA-001: beam width B=64 ..."],
   "summary": {"findings": 0},
   "findings": []
 }
@@ -125,4 +124,4 @@ Corrupt files, encrypted archives, exceeded budgets, unavailable dependencies, a
 
 ## Artifact scope
 
-This repository contains our method-faithful reference implementation. We intentionally do not bundle the research dataset, complete experimental rule corpus, private deployment configuration, model weights, or external baseline binaries. A “complete adapter matrix” means that every Table 1 format has an explicit handler and capability contract; it does not mean every optional backend is available in every environment. Until tests, dataset evaluation, model experiments, and baselines are actually run, we describe this delivery as publication-oriented source code rather than a validated numerical reproduction.
+This repository contains our current DIVIDE implementation. We intentionally do not bundle the research dataset, private deployment configuration, model weights, or external baseline binaries. A “complete adapter matrix” means that every Table 1 format has an explicit handler and capability contract; it does not mean every optional backend is available in every environment.

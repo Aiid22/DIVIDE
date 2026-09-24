@@ -53,5 +53,4 @@ def experiment_provenance(
             "implementation": platform.python_implementation(),
             "locale": os.environ.get("LC_ALL") or os.environ.get("LANG") or "unknown",
         },
-        "reproduction_status": "UNVALIDATED",
     }

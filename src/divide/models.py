@@ -201,7 +201,6 @@ class ScanReport:
     capabilities: list[dict[str, Any]] = field(default_factory=list)
     candidate_decisions: list[VerificationDecision] = field(default_factory=list)
     ablation_profile: str = "full"
-    engineering_assumptions: list[str] = field(default_factory=list)
     display_language: Literal["en", "zh"] = "en"
 
     def to_dict(self, show_secrets: bool = False) -> dict[str, Any]:
@@ -215,7 +214,6 @@ class ScanReport:
             "capabilities": self.capabilities,
             "candidate_decisions": [asdict(item) for item in self.candidate_decisions],
             "ablation_profile": self.ablation_profile,
-            "engineering_assumptions": self.engineering_assumptions,
             "summary": {
                 "scanned_objects": self.scanned_objects,
                 "carrier_records": self.carrier_records,

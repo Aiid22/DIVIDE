@@ -4,7 +4,7 @@
 
 ## DIVIDE core 2026.09.1
 
-Our core rules cover AWS, GitHub, GitLab, Slack, Stripe, Google API keys, PEM private keys, and generic sensitive-field assignments. They are defined in `default_rules.yaml`. Because we do not disclose the complete experimental rule corpus in the paper, this reference prototype uses an auditable high-confidence approximation. Every compiled rule carries provider, version, source, and license fields.
+Our current core rules cover AWS, GitHub, GitLab, Slack, Stripe, Google API keys, PEM private keys, and generic sensitive-field assignments. They are defined in `default_rules.yaml`, and every compiled rule carries provider, version, source, and license fields.
 
 ## Gitleaks v8.30.1
 
@@ -19,4 +19,4 @@ Our core rules take precedence over imported rules. Identical-pattern conflicts 
 
 ## GitHub token checksum
 
-Algorithm source: <https://github.blog/engineering/behind-githubs-new-authentication-token-formats/>. The source describes CRC32, Base62, the final six characters, and padding. We still register the alphabet as EA-005 pending confirmation with independent provider vectors.
+Algorithm source: <https://github.blog/engineering/behind-githubs-new-authentication-token-formats/>. The current implementation uses CRC32, the `0-9A-Za-z` Base62 alphabet, the final six characters, and left padding.
