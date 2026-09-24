@@ -1,30 +1,36 @@
 # Sample Data
 
 This folder contains a small showcase of **multi-type carrier samples** drawn from
-the benchmark used in the paper. Each file demonstrates one of the heterogeneous
-carriers that DIVIDE's localization, recovery, and verification stages are built
-for — plain text and source code, images, archives, binaries, and compiled
-translation catalogs.
+the benchmark used in the paper. Every credential-looking value in these samples
+is **synthetic**: planted markers, documentation defaults, or test fixtures. No
+real secret is included.
 
-Every credential-looking value in these samples is **synthetic**: planted
-markers, documentation defaults, or test fixtures. No real secret is included.
+## What is here now
 
-| Folder | Samples | What it shows |
-|---|---|---|
-| `text/` | Python, JavaScript, JSON, shell, Java, C, plain text | Secrets in source code, config files, base64-encoded pairs, embedded PGP keys, weak tokens |
-| `image/` | PNG, JPEG, WebP, GIF | Credential tables recovered by OCR; photo carriers |
-| `archive/` | ZIP, 7z, JAR | Nested and compressed carriers that flat scanners never open |
-| `binary/` | ELF, PE | Executables with embedded flag-like secrets |
-| `gettext/` | GNU `.mo` | Compiled message catalogs as a carrier |
+**20 files across 5 carrier categories and 17 MIME types**, 15 of which carry
+ground-truth secret annotations:
 
-Try the pipeline on all of them:
+| Folder | Files | Types | Annotated |
+|---|---|---|---|
+| `text/` | 9 | Python, JavaScript, JSON, Shell, Java, C, plain text | 9 |
+| `image/` | 5 | PNG, JPEG, WebP, GIF | 2 |
+| `archive/` | 3 | ZIP, 7z, JAR | 2 |
+| `binary/` | 2 | ELF, PE | 2 |
+| `gettext/` | 1 | GNU `.mo` | 0 |
+
+Ground truth lives in [`labels.jsonl`](labels.jsonl) — one JSON line per sample
+with `file`, `original_hash`, `category`, `mime`, `size_bytes`, and the
+annotated `secrets` (empty for carrier-only samples). Filenames keep the
+original content MD5 so results can be traced back to the benchmark.
+
+Try the pipeline on all of them and compare against the labels:
 
 ```bash
 divide scan data/ -o data-report.json
 ```
 
-## Full dataset
+## What is not here yet
 
-The complete benchmark — thousands of files across 40+ format types with
-file-level secret annotations — is **not** redistributed here. It will be
-fully released upon acceptance of the paper.
+The complete benchmark — thousands of files spanning 40+ format families with
+file-level secret annotations — is **not** redistributed at this stage. It will
+be fully released upon acceptance of the paper.
