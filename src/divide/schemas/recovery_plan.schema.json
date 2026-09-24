@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://divide.local/schema/recovery-plan-v1.json",
+  "title": "DIVIDE RecoveryPlan response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["plans"],
+  "properties": {
+    "plans": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["version", "group_id", "record_ids", "operations", "output_ref"],
+        "properties": {
+          "version": {"const": "1.0"},
+          "group_id": {"type": "string"},
+          "record_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[A-Za-z]:?[A-Za-z0-9:+.-]+$"}
+          },
+          "operations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {"oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op", "inputs", "output"],
+                "properties": {
+                  "op": {"const": "concat"},
+                  "inputs": {"type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true, "items": {"type": "string"}},
+                  "separator": {"type": "string", "maxLength": 8},
+                  "output": {"type": "string"}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op", "input", "encoding", "output"],
+                "properties": {
+                  "op": {"const": "decode"},
+                  "input": {"type": "string"},
+                  "encoding": {"enum": ["base64", "base64url", "hex", "url"]},
+                  "output": {"type": "string"}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op", "input", "positions", "output"],
+                "properties": {
+                  "op": {"const": "substitute"},
+                  "input": {"type": "string"},
+                  "positions": {"type": "object", "maxProperties": 16, "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 1}},
+                  "output": {"type": "string"}
+                }
+              }
+            ]}
+          },
+          "output_ref": {"type": "string"}
+        }
+      }
+    }
+  }
+}

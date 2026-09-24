@@ -1,0 +1,166 @@
+limits:
+  max_depth: 5
+  max_object_size: 52428800
+  max_expanded_size: 262144000
+  max_archive_members: 5000
+  max_sqlite_rows: 10000
+  max_ocr_pages: 100
+  max_decode_depth: 3
+  max_decode_output: 1048576
+  max_ocr_variants: 32
+  max_llm_groups: 20
+  max_compression_ratio: 200.0
+  max_image_pixels: 80000000
+  max_media_frames: 32
+  max_sqlite_vm_steps: 2000000
+  max_handler_seconds: 15.0
+  max_recovery_beam: 64
+  max_plan_operations: 16
+  max_plan_output: 1048576
+  max_rule_matches: 10000
+
+ocr:
+  enabled: true
+  language: eng
+  min_confidence: 35.0
+
+llm:
+  base_url: null
+  model: null
+  api_key_env: DIVIDE_LLM_API_KEY
+  allow_remote: false
+  timeout_seconds: 30.0
+  planner: "null"
+  profile: qwen3-32b-awq-vllm
+  prompt_version: divide-recovery-plan-v1
+
+detection:
+  minimum_score: 0.65
+  minimum_generic_entropy: 3.2
+  show_secrets: false
+  carrier_weight: 0.08
+  field_relation_weight: 0.10
+  recovery_weight: 0.20
+  positive_context_weight: 0.06
+  negative_context_weight: 0.06
+  max_regex_seconds: 0.25
+
+experiment:
+  random_seed: 20250301
+  raw_unit: occurrence
+  unique_unit: project_unique
+  status: UNVALIDATED
+
+engineering_assumptions:
+  - EA-001: beam width B=64; the paper does not publish its exact value.
+  - EA-002: resource ceilings and timeouts are implementation safety choices.
+  - EA-003: verification weights and acceptance threshold are not published by the paper.
+  - EA-004: OCR spacing heuristics and ambiguity penalties are engineering approximations.
+  - EA-005: the GitHub Base62 alphabet is configurable and must be validated against provider vectors.
+  - EA-006: Gitleaks v8.30.1 is a pinned proxy because the paper's exact rule commit is not public.
+  - EA-007: encoding evidence aggregation is an engineering approximation.
+  - EA-008: RelatedGroup field and position heuristics are not published by the paper.
+  - EA-009: the no-media ablation skips image, audio, and video handlers while retaining PDF text.
+  - EA-010: RE2-to-Python regex compatibility uses the regex package plus an explicit end-anchor translation.
+
+positive_context:
+  - api_key
+  - apikey
+  - access_key
+  - secret_key
+  - access_token
+  - auth_token
+  - bearer
+  - credential
+  - password
+  - private_key
+
+negative_context:
+  - test
+  - tests
+  - fixture
+  - sample
+  - example
+  - tutorial
+  - documentation
+
+hard_placeholders:
+  - your_key
+  - your_api_key
+  - example_token
+  - changeme
+  - replace_me
+  - dummy
+  - placeholder
+  - xxxxxxxxxx
+
+credential_rules:
+  - id: aws_access_key_id
+    name: AWS Access Key ID
+    pattern: '(?<![A-Z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Z0-9])'
+    min_length: 20
+    max_length: 20
+    prefixes: [AKIA, ASIA]
+    base_score: 0.62
+  - id: github_token
+    name: GitHub Token
+    pattern: '(?<![A-Za-z0-9])(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}(?![A-Za-z0-9])'
+    min_length: 40
+    max_length: 260
+    prefixes: [ghp_, gho_, ghu_, ghs_, ghr_]
+    checksum: github-crc32-base62-six
+    format_version: checksum-v1
+    base_score: 0.66
+  - id: github_fine_grained_pat
+    name: GitHub Fine-grained PAT
+    pattern: '(?<![A-Za-z0-9])github_pat_[A-Za-z0-9_]{40,255}(?![A-Za-z0-9])'
+    min_length: 51
+    max_length: 266
+    prefixes: [github_pat_]
+    checksum: github-crc32-base62-six
+    format_version: checksum-v1
+    base_score: 0.66
+  - id: gitlab_pat
+    name: GitLab Personal Access Token
+    pattern: '(?<![A-Za-z0-9-])glpat-[A-Za-z0-9_-]{20,255}(?![A-Za-z0-9_-])'
+    min_length: 26
+    max_length: 261
+    prefixes: [glpat-]
+    base_score: 0.66
+  - id: slack_token
+    name: Slack Token
+    pattern: '(?<![A-Za-z0-9-])xox[baprs]-[A-Za-z0-9-]{10,255}(?![A-Za-z0-9-])'
+    min_length: 15
+    max_length: 261
+    prefixes: [xoxb-, xoxa-, xoxp-, xoxr-, xoxs-]
+    base_score: 0.66
+  - id: stripe_live_key
+    name: Stripe Live Secret Key
+    pattern: '(?<![A-Za-z0-9_])sk_live_[A-Za-z0-9]{16,255}(?![A-Za-z0-9])'
+    min_length: 24
+    max_length: 263
+    prefixes: [sk_live_]
+    base_score: 0.68
+  - id: google_api_key
+    name: Google API Key
+    pattern: '(?<![A-Za-z0-9_-])AIza[A-Za-z0-9_-]{35}(?![A-Za-z0-9_-])'
+    min_length: 39
+    max_length: 39
+    prefixes: [AIza]
+    base_score: 0.64
+  - id: pem_private_key
+    name: PEM Private Key
+    pattern: '(?s)-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'
+    min_length: 80
+    max_length: 65536
+    prefixes: ['-----BEGIN']
+    base_score: 0.75
+  - id: generic_assignment
+    name: Generic Sensitive Assignment
+    pattern: '(?i)(?:api[_-]?key|access[_-]?token|auth[_-]?token|secret[_-]?key|password)\s*[:=]\s*["'']?([A-Za-z0-9_./+\-=]{12,512})'
+    secret_group: 1
+    min_length: 12
+    max_length: 512
+    base_score: 0.45
+    require_positive_context: true
+

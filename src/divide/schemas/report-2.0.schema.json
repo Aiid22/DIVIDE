@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://divide.local/schema/report-2.0.json",
+  "title": "DIVIDE scan report 2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "generated_at", "target", "config", "provenance", "capabilities",
+    "candidate_decisions", "ablation_profile", "engineering_assumptions", "summary", "findings", "warnings"
+  ],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "target": {"type": "string"},
+    "config": {"type": "object"},
+    "provenance": {"type": "object"},
+    "capabilities": {"type": "array", "items": {"type": "object"}},
+    "candidate_decisions": {"type": "array", "items": {"type": "object"}},
+    "ablation_profile": {"enum": ["full", "no-media", "no-recovery", "no-post-filter"]},
+    "engineering_assumptions": {"type": "array", "items": {"type": "string"}},
+    "summary": {
+      "type": "object",
+      "required": ["scanned_objects", "carrier_records", "raw_candidates", "findings", "duplicates_merged", "warnings"]
+    },
+    "findings": {"type": "array", "items": {"type": "object"}},
+    "warnings": {"type": "array", "items": {"type": "object"}}
+  }
+}

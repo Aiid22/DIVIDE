@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "replace-with-local-dataset-id",
+  "root": "./private-dataset-not-committed",
+  "artifacts": [
+    {
+      "artifact_id": "artifact-001",
+      "project_id": "project-001",
+      "relative_path": "example.bin",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "mime": "application/octet-stream",
+      "secrets": [
+        {
+          "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+          "location": "example.bin:ascii-offset:0@0:20",
+          "credential_type": "synthetic-example"
+        }
+      ]
+    }
+  ]
+}

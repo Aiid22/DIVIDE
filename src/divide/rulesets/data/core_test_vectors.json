@@ -1,0 +1,15 @@
+{
+  "version": "2026.09.1",
+  "status": "synthetic-format-only",
+  "vectors": [
+    {"rule_id": "aws_access_key_id", "template": "AKIA + 16 uppercase alphanumeric characters", "expected": "structural-match"},
+    {"rule_id": "github_token", "generator": "payload + GitHubTokenChecksum.suffix(payload)", "expected": "checksum-match"},
+    {"rule_id": "github_fine_grained_pat", "generator": "github_pat_ payload + checksum suffix", "expected": "checksum-match"},
+    {"rule_id": "gitlab_pat", "template": "glpat- + 20 synthetic characters", "expected": "structural-match"},
+    {"rule_id": "slack_token", "template": "xoxb- + synthetic segments", "expected": "structural-match"},
+    {"rule_id": "stripe_live_key", "template": "sk_live_ + 16 synthetic characters", "expected": "structural-match"},
+    {"rule_id": "google_api_key", "template": "AIza + 35 synthetic characters", "expected": "structural-match"},
+    {"rule_id": "pem_private_key", "template": "synthetic PEM boundary with non-key payload", "expected": "placeholder-or-parse-reject"},
+    {"rule_id": "generic_assignment", "template": "api_key= + synthetic high-entropy value", "expected": "contextual-match"}
+  ]
+}
