@@ -4,8 +4,6 @@
 
 我们在论文 *Divide and Conquer: Secret Discovery Beyond Text-Only Scanning* 中提出 DIVIDE，即“载体定位 → 秘密恢复 → 层次化离线验证”的三阶段方法。本仓库提供该方法的当前 Python 实现，对应论文第 2–3 页的 Fig. 2、Table 1、Algorithm 1、Equation (1) 与 §2.1–2.3。
 
-本仓库就是 DIVIDE 的当前实际实现。
-
 ## 方法映射
 
 ```text
@@ -26,8 +24,6 @@
 逐项对应关系和证据边界见[方法映射](docs/METHOD_MAPPING.md)。
 
 ## 载体能力矩阵
-
-我们的注册表为 Table 1 中每类格式提供独立 handler 契约：
 
 - 文本：源代码、TXT、JSON、CSV、XML、YAML、SVG、PEM。
 - 归档：ZIP、TAR、GZIP、7z、RAR、JAR、APK、RPM、ISO。
@@ -124,4 +120,4 @@ GitHub token checksum 插件实现 CRC32 → 使用 `0-9A-Za-z` 字母表的 Bas
 
 ## 研究制品边界
 
-本仓库包含 DIVIDE 的当前实际实现。我们有意不随仓库分发研究数据集、私有部署配置、模型权重或外部 baseline 可执行文件。Table 1 的“完整适配器矩阵”表示每种格式都有明确 handler 和能力契约，不表示所有环境均有完整后端。
+我们有意不随仓库分发研究数据集、私有部署配置、模型权重或外部 baseline 可执行文件。Table 1 的“完整适配器矩阵”表示每种格式都有明确 handler 和能力，不表示所有环境均有完整后端。
