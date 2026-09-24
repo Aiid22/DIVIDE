@@ -4,7 +4,7 @@ import hashlib
 import re
 from collections import defaultdict
 
-from divide.models import CarrierRecord, RecoveredSequence, RecoveryStep, RecoveryTrace, RelatedGroup
+from divide.models import CarrierRecord, RecoveryStep, RecoveryTrace, RelatedGroup
 
 from .decoder import RecoveredText
 
@@ -50,10 +50,6 @@ def build_related_groups(records: list[CarrierRecord]) -> tuple[list[RelatedGrou
     return groups, by_id
 
 
-def related_groups(records: list[CarrierRecord]) -> list[RelatedGroup]:
-    return build_related_groups(records)[0]
-
-
 def recover_fragments(records: list[CarrierRecord]) -> list[tuple[CarrierRecord, RecoveredText]]:
     recovered: list[tuple[CarrierRecord, RecoveredText]] = []
     groups, by_id = build_related_groups(records)
@@ -74,17 +70,16 @@ def recover_fragments(records: list[CarrierRecord]) -> list[tuple[CarrierRecord,
             )],
             group.confidence,
         )
-        sequence = RecoveredSequence(value, group.record_ids, trace, unique=True, alternatives_considered=1)
         synthetic = CarrierRecord(
             id=f"F:{group.id}", root_path=selected[0].root_path, nested_path=selected[0].nested_path,
-            carrier_type="related-group", location=" + ".join(group.ordering), text=sequence.value,
+            carrier_type="related-group", location=" + ".join(group.ordering), text=value,
             context=" ".join(record.context for record in selected), confidence=group.confidence,
             metadata={"group": group.id, "relation": group.relation, "rationale": group.rationale},
             parent_object_id=selected[0].parent_object_id, detected_type="related-group",
             relationship=group.relation, content_sha256=hashlib.sha256(value.encode()).hexdigest(),
             extraction_confidence=group.confidence,
         )
-        recovered.append((synthetic, RecoveredText(sequence.value, trace)))
+        recovered.append((synthetic, RecoveredText(value, trace)))
     return recovered
 
 

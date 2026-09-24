@@ -40,19 +40,17 @@ See [our method mapping](docs/METHOD_MAPPING.en.md) for the source-level corresp
 DIVIDE/
 ├── README.md                     # English entry point (default)
 ├── README.zh-CN.md               # Chinese entry point
-├── requirement.txt               # compatible dependency ranges
+├── pyproject.toml                # package metadata and compatible dependency ranges
 ├── constraints.txt               # pinned reproducibility versions
-├── requirements-dev.txt          # test and audit dependencies
 ├── docs/                          # bilingual method and audit records
 ├── examples/                      # unusable synthetic examples only
-├── src/divide/
-│   ├── localization/             # handler registry and recursive extraction
-│   ├── recovery/                 # encoding, beam search, RelatedGroup, RecoveryPlan
-│   ├── rulesets/                 # our rules, Gitleaks snapshot, and checksums
-│   ├── verification/             # hierarchical decisions and source-level deduplication
-│   ├── evaluation/               # manifest, RQ1 metrics, RQ2 ablations, baselines
-│   └── schemas/                  # JSON Schemas for reports and recovery plans
-└── tests/                         # unit, security, and handler-contract tests
+└── src/divide/
+    ├── localization/             # handler registry and recursive extraction
+    ├── recovery/                 # encoding, beam search, RelatedGroup, plan executor
+    ├── rulesets/                 # our rules, Gitleaks snapshot, and checksums
+    ├── verification/             # hierarchical decisions and source-level deduplication
+    ├── evaluation/               # manifest, RQ1 metrics, RQ2 ablations
+    └── schemas/                  # JSON Schema for the scan report
 ```
 
 ## CLI and language selection
@@ -91,7 +89,7 @@ We do not commit the research dataset. A manifest supplies `artifact_id`, `proje
 - raw occurrence: an instance defined by project, carrier, fingerprint, and location;
 - project unique: `(project_id, secret fingerprint)`, normalized only in the evaluation layer.
 
-Both units report precision, recall, F1, FDR, and latency. `ablate` runs the fixed `full`, `no-media`, `no-recovery`, and `no-post-filter` profiles. Results record code version, configuration/rule/capability hashes, random seed, model profile, manifest hash, and environment information. Adapters for Gitleaks, TruffleHog, KEYSENTINEL, and Qwen LLM/VLM baselines explicitly report `unavailable` in this delivery rather than fabricating results.
+Both units report precision, recall, F1, FDR, and latency. `ablate` runs the fixed `full`, `no-media`, `no-recovery`, and `no-post-filter` profiles. Results record code version, configuration/rule/capability hashes, random seed, model profile, manifest hash, and environment information. The Gitleaks, TruffleHog, KEYSENTINEL, and Qwen LLM/VLM comparisons in the paper were run with the upstream tools and deployments, which are not bundled with this repository.
 
 ## Schema 2.0 excerpt
 
@@ -115,7 +113,7 @@ Corrupt files, encrypted archives, exceeded budgets, unavailable dependencies, a
 - We validate archive member paths before temporary extraction, never write into the scan target, and skip symbolic links by default.
 - We open SQLite in read-only immutable mode with a query budget and parse XML through `defusedxml`.
 - Decoding, OCR beams, plan operations, and outputs are bounded; model text is never executed as code.
-- We use only unusable synthetic secrets in examples and tests. Evaluation manifests store fingerprints rather than plaintext.
+- We use only unusable synthetic secrets in examples. Evaluation manifests store fingerprints rather than plaintext.
 - `--show-secrets` writes plaintext into the report and should be used only in a controlled experiment environment.
 
 ## Artifact scope

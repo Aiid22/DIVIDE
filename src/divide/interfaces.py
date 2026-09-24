@@ -4,12 +4,8 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Protocol, runtime_checkable
 
 from divide.models import (
-    Candidate,
     CarrierObject,
-    CarrierRecord,
     CapabilityStatus,
-    RecoveryPlan,
-    RelatedGroup,
 )
 
 
@@ -21,8 +17,6 @@ class Capability:
     backend: str
     reason: str = ""
     external_requirements: tuple[str, ...] = ()
-    paper_table1: bool = True
-    operations: tuple[str, ...] = ("probe", "extract")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -32,8 +26,6 @@ class Capability:
             "backend": self.backend,
             "reason": self.reason,
             "external_requirements": list(self.external_requirements),
-            "paper_table1": self.paper_table1,
-            "operations": list(self.operations),
         }
 
 
@@ -80,21 +72,3 @@ class ChecksumValidator(Protocol):
     def supports(self, credential_type: str, format_version: str | None = None) -> bool: ...
 
     def validate(self, value: str, *, format_version: str | None = None) -> tuple[bool, str]: ...
-
-
-@runtime_checkable
-class RecoveryPlanner(Protocol):
-    planner_id: str
-
-    def plan(self, group: RelatedGroup, records: dict[str, CarrierRecord]) -> RecoveryPlan | None: ...
-
-    def status(self) -> dict[str, Any]: ...
-
-
-@runtime_checkable
-class BaselineAdapter(Protocol):
-    adapter_id: str
-
-    def capability(self) -> dict[str, Any]: ...
-
-    def scan(self, target: str) -> list[Candidate]: ...

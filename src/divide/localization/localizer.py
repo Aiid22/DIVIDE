@@ -903,10 +903,6 @@ class ArtifactLocalizer:
         )
 
     @staticmethod
-    def _decode_text(data: bytes) -> str:
-        return infer_encoding(data).text
-
-    @staticmethod
     def _warn(state: _State, code: str, path: str, message: str) -> None:
         state.result.warnings.append(ScanWarning(code=code, path=path, message=message))
 

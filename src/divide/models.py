@@ -108,25 +108,6 @@ class RelatedGroup:
 
 
 @dataclass(slots=True)
-class RecoveredSequence:
-    value: str
-    source_record_ids: list[str]
-    trace: RecoveryTrace
-    unique: bool = True
-    alternatives_considered: int = 1
-
-
-@dataclass(slots=True)
-class RecoveryPlan:
-    version: str
-    group_id: str
-    record_ids: list[str]
-    operations: list[dict[str, Any]]
-    output_ref: str
-    planner: str = "deterministic"
-
-
-@dataclass(slots=True)
 class VerificationDecision:
     candidate_fingerprint: str
     accepted: bool

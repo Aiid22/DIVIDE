@@ -40,19 +40,17 @@
 DIVIDE/
 ├── README.md                     # 默认英文入口
 ├── README.zh-CN.md               # 中文入口
-├── requirement.txt               # 兼容依赖范围
+├── pyproject.toml                # 包元数据与兼容依赖范围
 ├── constraints.txt               # 可重复实验固定版本
-├── requirements-dev.txt          # 测试与审计依赖
 ├── docs/                          # 双语方法和审计记录
 ├── examples/                      # 全部是不可用的合成示例
-├── src/divide/
-│   ├── localization/             # handler registry 与递归载体提取
-│   ├── recovery/                 # 编码、beam、RelatedGroup、RecoveryPlan
-│   ├── rulesets/                 # 我们的规则、Gitleaks 快照和 checksum
-│   ├── verification/             # 层次化决策与来源级去重
-│   ├── evaluation/               # manifest、RQ1 指标、RQ2 消融、baseline
-│   └── schemas/                  # 报告与恢复计划 JSON Schema
-└── tests/                         # 单元、安全和 handler contract 测试
+└── src/divide/
+    ├── localization/             # handler registry 与递归载体提取
+    ├── recovery/                 # 编码、beam、RelatedGroup、计划执行器
+    ├── rulesets/                 # 我们的规则、Gitleaks 快照和 checksum
+    ├── verification/             # 层次化决策与来源级去重
+    ├── evaluation/               # manifest、RQ1 指标、RQ2 消融
+    └── schemas/                  # 扫描报告 JSON Schema
 ```
 
 ## CLI 与中英文切换
@@ -91,7 +89,7 @@ GitHub token checksum 插件实现 CRC32 → 使用 `0-9A-Za-z` 字母表的 Bas
 - raw occurrence：项目、载体、指纹和位置组成的出现实例；
 - project unique：`(project_id, secret fingerprint)`，只在评测层归一化。
 
-两种口径均输出 precision、recall、F1、FDR 和 latency。`ablate` 固定运行 `full`、`no-media`、`no-recovery`、`no-post-filter`。结果包含代码版本、配置/规则/能力矩阵哈希、随机种子、模型档案、manifest 哈希和环境信息。Gitleaks、TruffleHog、KEYSENTINEL、Qwen LLM/VLM baseline 本轮仅提供显式 `unavailable` 接口，不会伪造结果。
+两种口径均输出 precision、recall、F1、FDR 和 latency。`ablate` 固定运行 `full`、`no-media`、`no-recovery`、`no-post-filter`。结果包含代码版本、配置/规则/能力矩阵哈希、随机种子、模型档案、manifest 哈希和环境信息。论文中的 Gitleaks、TruffleHog、KEYSENTINEL、Qwen LLM/VLM 对比使用上游工具与部署完成，相应可执行文件和模型不随本仓库分发。
 
 ## schema 2.0 输出片段
 
@@ -115,7 +113,7 @@ GitHub token checksum 插件实现 CRC32 → 使用 `0-9A-Za-z` 字母表的 Bas
 - 我们在临时展开前检查归档成员路径，不向扫描目标写文件，并默认跳过符号链接。
 - SQLite 使用只读 immutable 模式及查询预算；XML 使用 `defusedxml`。
 - 解码、OCR beam、规划操作和输出都有上限；模型文本从不作为代码执行。
-- 示例和测试只使用不可用的合成秘密；评测 manifest 保存指纹，不保存秘密明文。
+- 示例只使用不可用的合成秘密；评测 manifest 保存指纹，不保存秘密明文。
 - `--show-secrets` 会把明文写入报告，只应在受控实验环境使用。
 
 ## 研究制品边界

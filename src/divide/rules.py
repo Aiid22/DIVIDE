@@ -10,7 +10,7 @@ import regex as regex_engine
 
 from divide.config import AppConfig
 from divide.models import Candidate, CarrierRecord, RecoveryTrace
-from divide.rulesets import CompositeRuleProvider, ConfigRuleProvider, GitleaksRuleProvider
+from divide.rulesets import CompositeRuleProvider, ConfigRuleProvider, GitleaksRuleProvider, translate_re2
 
 
 @dataclass(slots=True)
@@ -40,31 +40,12 @@ class CredentialRule:
     regex: Any = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.regex = regex_engine.compile(_translate_re2(self.pattern))
+        self.regex = regex_engine.compile(translate_re2(self.pattern))
 
     @classmethod
     def from_mapping(cls, value: dict[str, Any]) -> "CredentialRule":
         allowed = {field.name for field in cls.__dataclass_fields__.values() if field.init}  # type: ignore[attr-defined]
         return cls(**{key: item for key, item in value.items() if key in allowed})
-
-    def hard_constraints(self, value: str) -> tuple[bool, list[str]]:
-        evidence = [f"matched {self.provider_id}:{self.id}", f"inferred format {self.format_version or 'unspecified'}"]
-        if not self.min_length <= len(value) <= self.max_length:
-            return False, [*evidence, "length constraint failed"]
-        evidence.append(f"length {len(value)} within [{self.min_length}, {self.max_length}]")
-        if self.prefixes and not any(value.startswith(prefix) for prefix in self.prefixes):
-            return False, [*evidence, "prefix constraint failed"]
-        if self.prefixes:
-            evidence.append("recognized credential prefix")
-        if self.charset and regex_engine.fullmatch(_translate_re2(self.charset), value) is None:
-            return False, [*evidence, "character-set constraint failed"]
-        if self.charset:
-            evidence.append("allowed character set")
-        if self.delimiter_pattern and regex_engine.fullmatch(_translate_re2(self.delimiter_pattern), value) is None:
-            return False, [*evidence, "delimiter constraint failed"]
-        if self.delimiter_pattern:
-            evidence.append("delimiter structure valid")
-        return True, evidence
 
     def is_allowlisted(self, value: str, path: str, match_text: str = "") -> tuple[bool, str]:
         lowered = value.casefold()
@@ -75,10 +56,10 @@ class CredentialRule:
             target_name = block.get("regexTarget", "secret")
             target = {"secret": value, "match": match_text, "line": match_text, "path": path}.get(target_name, value)
             for expression in block.get("regexes", []):
-                if regex_engine.search(_translate_re2(expression), target):
+                if regex_engine.search(translate_re2(expression), target):
                     return True, f"rule allowlist regex matched: {expression}"
             for expression in block.get("paths", []):
-                if regex_engine.search(_translate_re2(expression), path):
+                if regex_engine.search(translate_re2(expression), path):
                     return True, f"rule allowlist path matched: {expression}"
         return False, ""
 
@@ -135,7 +116,7 @@ class CandidateExtractor:
                 )
                 if allowlisted:
                     continue
-                if rule.entropy is not None and _shannon_entropy(value) < float(rule.entropy):
+                if rule.entropy is not None and shannon_entropy(value) < float(rule.entropy):
                     continue
                 local_context = text[max(0, match.start() - 120):min(len(text), match.end() + 120)]
                 location = f"{record.location}@{start}:{end}"
@@ -155,13 +136,8 @@ class CandidateExtractor:
         return candidates
 
 
-def _shannon_entropy(value: str) -> float:
+def shannon_entropy(value: str) -> float:
     if not value:
         return 0.0
     counts = {character: value.count(character) for character in set(value)}
     return -sum((count / len(value)) * math.log2(count / len(value)) for count in counts.values())
-
-
-def _translate_re2(pattern: str) -> str:
-    """Small, explicit RE2-to-Python compatibility layer for the pinned corpus."""
-    return pattern.replace(r"\z", r"\Z")

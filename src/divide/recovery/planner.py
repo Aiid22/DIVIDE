@@ -12,18 +12,16 @@ import httpx
 from jsonschema import Draft202012Validator
 
 from divide.config import AppConfig
-from divide.models import CarrierRecord, RecoveryPlan, RecoveryStep, RecoveryTrace, RelatedGroup, ScanWarning
+from divide.models import CarrierRecord, RecoveryStep, RecoveryTrace, RelatedGroup, ScanWarning
 
 from .decoder import RecoveredText, decode_exact
 from .fragments import build_related_groups
 
 
 PROMPT_VERSION = "divide-recovery-plan-v1"
-SYSTEM_PROMPT = """You are the recovery planner for DIVIDE. Return JSON conforming to
-RecoveryPlan v1. You may only reference supplied record IDs. Allowed operations:
-concat, decode(base64|base64url|hex|url), and substitute(0/O/1/l/I only).
-Never invent literal secret material, run code, or add explanations. Produce at
-most one plan for a group; if reconstruction is ambiguous, return {"plans":[]}."""
+SYSTEM_PROMPT = (
+    files("divide.profiles").joinpath("recovery_prompt_v1.txt").read_text(encoding="utf-8").strip()
+)
 
 PLAN_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -150,21 +148,23 @@ class DeterministicPlanExecutor:
         return synthetic, RecoveredText(value, RecoveryTrace(record_ids, steps, confidence))
 
 
+def _profile_artifact_hashes() -> dict[str, str]:
+    profile_path = files("divide.profiles").joinpath("qwen3-32b-awq-vllm.yaml")
+    prompt_path = files("divide.profiles").joinpath("recovery_prompt_v1.txt")
+    return {
+        "profile_sha256": hashlib.sha256(profile_path.read_bytes()).hexdigest(),
+        "prompt_sha256": hashlib.sha256(prompt_path.read_bytes()).hexdigest(),
+    }
+
+
 class NullRecoveryPlanner:
     planner_id = "null"
 
-    def plan(self, group: RelatedGroup, records: dict[str, CarrierRecord]) -> RecoveryPlan | None:
-        return None
-
     def status(self) -> dict[str, Any]:
-        profile_path = files("divide.profiles").joinpath("qwen3-32b-awq-vllm.yaml")
-        prompt_path = files("divide.profiles").joinpath("recovery_prompt_v1.txt")
         return {
             "planner_id": self.planner_id, "status": "model_unavailable",
             "reason": "model execution disabled by default", "profile": "qwen3-32b-awq-vllm",
-            "prompt_version": PROMPT_VERSION,
-            "profile_sha256": hashlib.sha256(profile_path.read_bytes()).hexdigest(),
-            "prompt_sha256": hashlib.sha256(prompt_path.read_bytes()).hexdigest(),
+            "prompt_version": PROMPT_VERSION, **_profile_artifact_hashes(),
         }
 
     def recover(self, records: list[CarrierRecord]) -> PlannerResult:
@@ -180,14 +180,10 @@ class OpenAIRecoveryPlanner:
 
     def status(self) -> dict[str, Any]:
         enabled = bool(self.config.llm.base_url and self.config.llm.model and self.config.llm.planner != "null")
-        profile_path = files("divide.profiles").joinpath("qwen3-32b-awq-vllm.yaml")
-        prompt_path = files("divide.profiles").joinpath("recovery_prompt_v1.txt")
         return {
             "planner_id": self.planner_id, "status": "available" if enabled else "model_unavailable",
             "profile": self.config.llm.profile, "model": self.config.llm.model,
-            "prompt_version": PROMPT_VERSION,
-            "profile_sha256": hashlib.sha256(profile_path.read_bytes()).hexdigest(),
-            "prompt_sha256": hashlib.sha256(prompt_path.read_bytes()).hexdigest(),
+            "prompt_version": PROMPT_VERSION, **_profile_artifact_hashes(),
         }
 
     def recover(self, records: list[CarrierRecord]) -> PlannerResult:

@@ -41,9 +41,6 @@ dependencies = [
   "xlrd>=2.0,<3.0",
 ]
 
-[project.optional-dependencies]
-test = ["pytest>=8.3,<9.0", "hypothesis>=6.0,<7.0", "pytest-cov>=6.0,<7.0"]
-
 [project.scripts]
 divide = "divide.cli:app"
 
@@ -58,8 +55,4 @@ where = ["src"]
 divide = ["default_rules.yaml", "schemas/*.json"]
 "divide.rulesets.data" = ["*.toml", "*.json", "LICENSE.gitleaks"]
 "divide.profiles" = ["*.yaml", "*.txt"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]
 

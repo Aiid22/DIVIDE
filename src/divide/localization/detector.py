@@ -140,7 +140,3 @@ def detect(data: bytes, name: str) -> Detection:
     except (ImportError, OSError):
         pass
     return Detection("binary", "application/octet-stream", .40, False, ("unknown-binary fallback",))
-
-
-def detect_kind(data: bytes, name: str) -> str:
-    return detect(data, name).kind

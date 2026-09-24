@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import hashlib
-import math
 import re
 import unicodedata
 from dataclasses import dataclass
 
 from divide.config import AppConfig
 from divide.models import Candidate, Finding, VerificationDecision
+from divide.rules import shannon_entropy
 from divide.rulesets import ChecksumRegistry
 
 
@@ -134,7 +134,7 @@ class Verifier:
             if _looks_like_repeated_filler(candidate.value):
                 score -= .25
                 evidence.append("soft negative repeated filler pattern")
-            entropy = _shannon_entropy(candidate.value)
+            entropy = shannon_entropy(candidate.value)
             if entropy >= self.config.detection.minimum_generic_entropy:
                 score += .08
                 evidence.append(f"string entropy {entropy:.2f}")
@@ -180,13 +180,6 @@ def _carrier_score(carrier_type: str) -> float:
     if carrier_type in {"related-group", "recovery-plan", "image", "pdf-page"}:
         return .2
     return 0.0
-
-
-def _shannon_entropy(value: str) -> float:
-    if not value:
-        return 0.0
-    counts = {character: value.count(character) for character in set(value)}
-    return -sum((count / len(value)) * math.log2(count / len(value)) for count in counts.values())
 
 
 def _looks_like_repeated_filler(value: str) -> bool:

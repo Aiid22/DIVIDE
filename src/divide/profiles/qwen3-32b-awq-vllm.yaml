@@ -6,7 +6,7 @@ base_url: null
 model: null
 temperature: 0
 prompt_version: divide-recovery-plan-v1
-response_schema: ../schemas/recovery_plan.schema.json
+response_schema: inline (divide.recovery.planner.PLAN_SCHEMA)
 allowed_operations: [concat, decode, substitute]
 remote_allowed_by_default: false
 execution_in_this_artifact: false

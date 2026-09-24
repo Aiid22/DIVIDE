@@ -14,7 +14,8 @@ from divide.config import AppConfig
 from divide.provenance import stable_hash
 
 
-def _translate_re2(pattern: str) -> str:
+def translate_re2(pattern: str) -> str:
+    """Small, explicit RE2-to-Python compatibility layer for the pinned corpus."""
     return pattern.replace(r"\z", r"\Z")
 
 
@@ -43,7 +44,7 @@ class ConfigRuleProvider:
         errors = []
         for rule in rules:
             try:
-                regex_engine.compile(_translate_re2(rule["pattern"]))
+                regex_engine.compile(translate_re2(rule["pattern"]))
             except (re.error, regex_engine.error) as exc:
                 errors.append({"rule_id": rule.get("id"), "error": str(exc)})
         return {
@@ -66,6 +67,8 @@ class GitleaksRuleProvider:
         global_allowlist = data.get("allowlist") or {}
         converted = []
         for raw in data.get("rules", []):
+            if "regex" not in raw:
+                continue  # path-only rules (e.g. pkcs12-file) flag file names, not content
             allowlists = [global_allowlist, *raw.get("allowlists", [])] if global_allowlist else raw.get("allowlists", [])
             stopwords = list(raw.get("stopwords", []))
             for block in allowlists:
@@ -97,7 +100,7 @@ class GitleaksRuleProvider:
         errors = []
         for rule in rules:
             try:
-                regex_engine.compile(_translate_re2(rule["pattern"]))
+                regex_engine.compile(translate_re2(rule["pattern"]))
             except (re.error, regex_engine.error) as exc:
                 errors.append({"rule_id": rule["id"], "error": str(exc)})
         return {
